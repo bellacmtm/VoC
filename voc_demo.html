@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice of Customer — VIP Demo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --surface: #16161a;
+    --card: #1e1e24;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --text: #f0eff4;
+    --muted: #8b8a96;
+    --accent: #7f77dd;
+    --accent-bg: rgba(127,119,221,0.12);
+    --accent-border: rgba(127,119,221,0.3);
+    --teal: #1d9e75;
+    --teal-bg: rgba(29,158,117,0.12);
+    --amber: #eda100;
+    --amber-bg: rgba(237,161,0,0.1);
+    --red: #e34948;
+    --red-bg: rgba(227,73,72,0.1);
+    --green: #1baf7a;
+    --green-bg: rgba(27,175,122,0.1);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(14,14,16,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; gap: 0; height: 52px; }
+  .nav-logo { font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: 0.04em; margin-right: 2rem; white-space: nowrap; }
+  .nav-steps { display: flex; gap: 0; flex: 1; }
+  .nav-step { padding: 0 1.2rem; height: 52px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .nav-step:hover { color: var(--text); }
+  .nav-step.active { color: var(--text); border-bottom-color: var(--accent); }
+  .nav-step .step-num { width: 20px; height: 20px; border-radius: 50%; background: var(--card); border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; transition: all 0.2s; }
+  .nav-step.active .step-num { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .nav-step.done .step-num { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .nav-step.done { color: var(--muted); }
+
+  /* SCREENS */
+  .screen { display: none; padding: 2.5rem 2rem; max-width: 860px; margin: 0 auto; }
+  .screen.active { display: block; }
+
+  /* TYPOGRAPHY */
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem; }
+  h1 { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 0.75rem; }
+  h2 { font-size: 20px; font-weight: 600; margin-bottom: 1rem; }
+  h3 { font-size: 15px; font-weight: 600; margin-bottom: 0.5rem; }
+  .subtitle { font-size: 16px; color: var(--muted); line-height: 1.6; max-width: 580px; margin-bottom: 2rem; }
+  p { color: var(--muted); margin-bottom: 0.75rem; }
+
+  /* CARDS */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; }
+  .card + .card { margin-top: 1rem; }
+
+  /* SCREEN 1 — PROBLEM */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+  .channel-row { display: flex; flex-direction: column; gap: 10px; margin: 1.5rem 0; }
+  .channel-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
+  .channel-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .channel-name { font-size: 14px; font-weight: 500; flex: 1; }
+  .channel-pain { font-size: 12px; color: var(--muted); }
+  .pain-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--red-bg); color: var(--red); border: 1px solid rgba(227,73,72,0.2); white-space: nowrap; }
+  .arrow-down { text-align: center; color: var(--muted); font-size: 20px; margin: 0.5rem 0; }
+  .agent-box { background: var(--card); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 1rem 1.5rem; display: flex; align-items: center; gap: 12px; }
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 1.5rem 0; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; text-align: center; }
+  .stat .num { font-size: 32px; font-weight: 700; color: var(--red); }
+  .stat .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* SCREEN 2 — PIPELINE */
+  .transcript-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .t-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-strong); background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .t-btn:hover { border-color: var(--accent-border); color: var(--text); }
+  .t-btn.active { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+  .transcript-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; font-size: 13px; color: var(--text); line-height: 1.7; margin-bottom: 1.25rem; min-height: 120px; white-space: pre-wrap; font-family: inherit; }
+  .analyse-btn { display: flex; align-items: center; gap: 8px; padding: 10px 24px; background: var(--accent); border: none; border-radius: var(--radius); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; margin-bottom: 1.5rem; }
+  .analyse-btn:hover { opacity: 0.88; }
+  .analyse-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .output-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .output-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; opacity: 0; transform: translateY(8px); transition: all 0.35s; }
+  .output-card.visible { opacity: 1; transform: translateY(0); }
+  .output-card .label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .output-card .value { font-size: 18px; font-weight: 700; }
+  .output-card .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .score-bar { height: 6px; border-radius: 3px; background: var(--border); margin-top: 10px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+  .key-phrase { display: inline-block; background: var(--accent-bg); border: 1px solid var(--accent-border); color: var(--accent); border-radius: 20px; padding: 3px 10px; font-size: 12px; margin: 3px 3px 0 0; }
+  .processing { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; padding: 0.75rem 0; }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* SCREEN 3 — DASHBOARD */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
+  .kpi .k-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .kpi .k-value { font-size: 24px; font-weight: 700; }
+  .kpi .k-delta { font-size: 11px; margin-top: 3px; }
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+  .chart-card h3 { font-size: 13px; color: var(--muted); font-weight: 500; margin-bottom: 1rem; }
+  .full { grid-column: 1 / -1; }
+  .legend { display: flex; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+  .ldot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .filter-row { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .f-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-strong); background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .f-btn.active { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .badge.pos { background: var(--green-bg); color: var(--green); }
+  .badge.neg { background: var(--red-bg); color: var(--red); }
+  .badge.neu { background: var(--amber-bg); color: var(--amber); }
+  .ch-tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
+
+  /* NAV BUTTONS */
+  .nav-btns { display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .btn-next { padding: 10px 24px; background: var(--accent); border: none; border-radius: var(--radius); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+  .btn-next:hover { opacity: 0.88; }
+  .btn-prev { padding: 10px 24px; background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius); color: var(--muted); font-size: 14px; cursor: pointer; transition: all 0.15s; }
+  .btn-prev:hover { color: var(--text); border-color: var(--text); }
+  .spacer { flex: 1; }
+
+  /* CHURN FLAG */
+  .churn-flag { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--red-bg); border: 1px solid rgba(227,73,72,0.25); border-radius: var(--radius); margin-top: 1rem; font-size: 13px; color: var(--red); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">VoC · VIP</div>
+  <div class="nav-steps">
+    <div class="nav-step active" onclick="goTo(1)" id="step1">
+      <div class="step-num">1</div> The problem
+    </div>
+    <div class="nav-step" onclick="goTo(2)" id="step2">
+      <div class="step-num">2</div> Live analysis
+    </div>
+    <div class="nav-step" onclick="goTo(3)" id="step3">
+      <div class="step-num">3</div> Dashboard
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 1 — THE PROBLEM
+════════════════════════════════════════════ -->
+<div class="screen active" id="screen1">
+  <div class="eyebrow">Voice of Customer — Phase 1</div>
+  <h1>Data is coming in.<br>Nothing is coming out.</h1>
+  <p class="subtitle">The VIP team manages high-value players across 6 channels. Every interaction is logged manually into Terragon — creating admin overhead, inconsistency, and zero visibility.</p>
+
+  <div class="stat-row">
+    <div class="stat">
+      <div class="num">6</div>
+      <div class="lbl">Communication channels</div>
+    </div>
+    <div class="stat">
+      <div class="num">100%</div>
+      <div class="lbl">Logged manually today</div>
+    </div>
+    <div class="stat">
+      <div class="num">0</div>
+      <div class="lbl">Automated insights</div>
+    </div>
+  </div>
+
+  <h2>Where conversations happen today</h2>
+  <div class="channel-row">
+    <div class="channel-item">
+      <div class="channel-icon" style="background:rgba(39,174,239,0.15);color:#27aeef">✈</div>
+      <div class="channel-name">Telegram</div>
+      <div class="channel-pain">Most active VIP channel</div>
+      <div class="pain-badge">Manual log</div>
+    </div>
+    <div class="channel-item">
+      <div class="channel-icon" style="background:rgba(37,211,102,0.15);color:#25d366">✉</div>
+      <div class="channel-name">WhatsApp</div>
+      <div class="channel-pain">High volume, no structure</div>
+      <div class="pain-badge">Manual log</div>
+    </div>
+    <div class="channel-item">
+      <div class="channel-icon" style="background:rgba(237,161,0,0.15);color:#eda100">◉</div>
+      <div class="channel-name">SMS</div>
+      <div class="channel-pain">No thread history</div>
+      <div class="pain-badge">Manual log</div>
+    </div>
+    <div class="channel-item">
+      <div class="channel-icon" style="background:rgba(127,119,221,0.15);color:#7f77dd">@</div>
+      <div class="channel-name">Email</div>
+      <div class="channel-pain">Scattered across inboxes</div>
+      <div class="pain-badge">Manual log</div>
+    </div>
+    <div class="channel-item">
+      <div class="channel-icon" style="background:rgba(29,158,117,0.15);color:#1d9e75">⬡</div>
+      <div class="channel-name">Intercom</div>
+      <div class="channel-pain">Partially used only</div>
+      <div class="pain-badge">Manual log</div>
+    </div>
+    <div class="channel-item">
+      <div class="channel-icon" style="background:rgba(227,73,72,0.15);color:#e34948">☎</div>
+      <div class="channel-name">Phone (Aircall)</div>
+      <div class="channel-pain">Transcripts exist but unused</div>
+      <div class="pain-badge">Manual log</div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <div class="agent-box">
+    <div style="width:40px;height:40px;border-radius:50%;background:var(--accent-bg);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👤</div>
+    <div>
+      <div style="font-weight:600;font-size:14px">VIP agent reads, summarises, and types into Terragon</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">Time lost per interaction: ~8–12 minutes · Error rate: high · Insights generated: none</div>
+    </div>
+  </div>
+
+  <div class="nav-btns">
+    <div class="spacer"></div>
+    <button class="btn-next" onclick="goTo(2)">See the solution →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 2 — LIVE ANALYSIS
+════════════════════════════════════════════ -->
+<div class="screen" id="screen2">
+  <div class="eyebrow">Stage 3 of 5 — AI analysis</div>
+  <h1>Claude reads every interaction.<br>You see what matters.</h1>
+  <p class="subtitle">Select a sample VIP conversation. Claude extracts sentiment, issue category, resolution status, and churn signals — automatically.</p>
+
+  <h3 style="margin-bottom:0.75rem">Choose a sample interaction</h3>
+  <div class="transcript-picker">
+    <button class="t-btn active" onclick="selectTranscript(0, this)">Frustrated — withdrawal</button>
+    <button class="t-btn" onclick="selectTranscript(1, this)">Happy — bonus</button>
+    <button class="t-btn" onclick="selectTranscript(2, this)">Churn risk — going quiet</button>
+    <button class="t-btn" onclick="selectTranscript(3, this)">Technical complaint</button>
+  </div>
+
+  <div class="transcript-box" id="transcriptBox"></div>
+
+  <button class="analyse-btn" onclick="runAnalysis()" id="analyseBtn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    Analyse with Claude
+  </button>
+
+  <div id="processingMsg" style="display:none">
+    <div class="processing"><div class="spinner"></div>Claude is reading the transcript…</div>
+  </div>
+
+  <div class="output-grid" id="outputGrid" style="display:none">
+    <div class="output-card" id="oc1">
+      <div class="label">Sentiment</div>
+      <div class="value" id="sentValue"></div>
+      <div class="score-bar"><div class="score-fill" id="scoreFill"></div></div>
+      <div class="sub" id="scoreLabel"></div>
+    </div>
+    <div class="output-card" id="oc2">
+      <div class="label">Issue category</div>
+      <div class="value" id="issueValue" style="font-size:15px;margin-top:4px"></div>
+    </div>
+    <div class="output-card" id="oc3">
+      <div class="label">Resolution status</div>
+      <div class="value" id="resolvedValue"></div>
+      <div class="sub" id="resolvedSub"></div>
+    </div>
+    <div class="output-card" id="oc4">
+      <div class="label">Churn risk</div>
+      <div class="value" id="churnValue"></div>
+      <div class="sub" id="churnSub"></div>
+    </div>
+    <div class="output-card full" id="oc5">
+      <div class="label">Key phrases extracted</div>
+      <div id="phrasesContainer" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <div id="churnAlert" style="display:none">
+    <div class="churn-flag">⚠ Churn signal detected — this player may need proactive outreach before their next interaction.</div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn-prev" onclick="goTo(1)">← Back</button>
+    <button class="btn-next" onclick="goTo(3)">See the dashboard →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 3 — DASHBOARD
+════════════════════════════════════════════ -->
+<div class="screen" id="screen3">
+  <div class="eyebrow">Stage 5 of 5 — Visibility layer</div>
+  <h1>What the head of VIP<br>sees every morning.</h1>
+  <p class="subtitle">All interactions tagged, scored, and surfaced. No manual work required.</p>
+
+  <div class="filter-row" id="filterRow">
+    <button class="f-btn active" onclick="filterCh('all',this)">All channels</button>
+    <button class="f-btn" onclick="filterCh('Telegram',this)">Telegram</button>
+    <button class="f-btn" onclick="filterCh('WhatsApp',this)">WhatsApp</button>
+    <button class="f-btn" onclick="filterCh('SMS',this)">SMS</button>
+    <button class="f-btn" onclick="filterCh('Email',this)">Email</button>
+    <button class="f-btn" onclick="filterCh('Intercom',this)">Intercom</button>
+    <button class="f-btn" onclick="filterCh('Phone',this)">Phone</button>
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3>Sentiment breakdown</h3>
+      <div class="legend">
+        <span><span class="ldot" style="background:#1baf7a"></span>Positive</span>
+        <span><span class="ldot" style="background:#eda100"></span>Neutral</span>
+        <span><span class="ldot" style="background:#e34948"></span>Negative</span>
+      </div>
+      <div style="position:relative;height:180px"><canvas id="sentChart" role="img" aria-label="Sentiment breakdown doughnut chart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Issues by category</h3>
+      <div style="position:relative;height:210px"><canvas id="issueChart" role="img" aria-label="Issue categories bar chart"></canvas></div>
+    </div>
+    <div class="chart-card full">
+      <h3>Sentiment trend — last 4 weeks</h3>
+      <div class="legend">
+        <span><span class="ldot" style="background:#1baf7a"></span>Positive</span>
+        <span><span class="ldot" style="background:#eda100"></span>Neutral</span>
+        <span><span class="ldot" style="background:#e34948"></span>Negative</span>
+      </div>
+      <div style="position:relative;height:160px"><canvas id="trendChart" role="img" aria-label="Weekly sentiment trend line chart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <h3 style="margin-bottom:1rem;font-size:14px;color:var(--muted);font-weight:500">Recent interactions</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Player</th><th>Channel</th><th>Issue</th><th>Sentiment</th><th>Resolved</th><th>Key signal</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn-prev" onclick="goTo(2)">← Back</button>
+    <div class="spacer"></div>
+    <div style="font-size:13px;color:var(--muted)">End of demo</div>
+  </div>
+</div>
+
+<script>
+// ── NAVIGATION ──
+let current = 1;
+const done = new Set();
+function goTo(n) {
+  document.getElementById('screen'+current).classList.remove('active');
+  document.getElementById('step'+current).classList.remove('active');
+  if (current < n) done.add(current);
+  current = n;
+  document.getElementById('screen'+n).classList.add('active');
+  const step = document.getElementById('step'+n);
+  step.classList.add('active');
+  step.classList.remove('done');
+  done.forEach(d => {
+    const s = document.getElementById('step'+d);
+    s.classList.remove('active');
+    s.classList.add('done');
+  });
+  window.scrollTo(0,0);
+  if (n === 3) renderDashboard();
+}
+
+// ── TRANSCRIPTS ──
+const transcripts = [
+  {
+    text: `Agent: Hi, thanks for reaching out. How can I help you today?\n\nPlayer: I've been waiting 3 days for my withdrawal to come through. This is absolutely unacceptable. I have bills to pay.\n\nAgent: I'm really sorry to hear that. Let me pull up your account right now and check the status.\n\nPlayer: This keeps happening. Every single time. I'm seriously thinking about moving to another platform.\n\nAgent: I completely understand your frustration. I can see the withdrawal is still pending due to a verification hold. I'm escalating this now as priority and you should see it within 24 hours.\n\nPlayer: Fine. But this is the last time I deal with this.`,
+    result: {
+      sentiment: 'Negative', sentScore: -0.78, scoreColor: '#e34948',
+      issue: 'Withdrawal delay', resolved: 'Yes', resolvedSub: 'Escalated by agent',
+      churn: 'High', churnSub: 'Expressed intent to leave',
+      phrases: ['"This keeps happening"', '"Every single time"', '"Thinking about moving"', '"Last time I deal with this"'],
+      showChurn: true
+    }
+  },
+  {
+    text: `Player: Hey, just wanted to say the new monthly bonus you guys set up for me was amazing. Really appreciated the personal touch.\n\nAgent: So glad to hear that! We put a lot of thought into tailoring it for your play style.\n\nPlayer: Honestly it's what keeps me coming back. The team here actually listens, which is rare.\n\nAgent: That means a lot. Is there anything else we can do for you this month?\n\nPlayer: Nope, all good. Keep doing what you're doing!`,
+    result: {
+      sentiment: 'Positive', sentScore: 0.88, scoreColor: '#1baf7a',
+      issue: 'Compliment / bonus praise', resolved: 'Yes', resolvedSub: 'No issue raised',
+      churn: 'Low', churnSub: 'High satisfaction expressed',
+      phrases: ['"Personal touch"', '"Keeps me coming back"', '"Team actually listens"', '"Keep doing what you\'re doing"'],
+      showChurn: false
+    }
+  },
+  {
+    text: `Agent: Hi, we noticed you haven't logged in for a while and wanted to check in. Is everything okay?\n\nPlayer: Yeah I've just been busy. And to be honest a bit frustrated after what happened last month.\n\nAgent: I'm sorry to hear that. Would you like to tell me what happened?\n\nPlayer: It was a bonus issue, it got sorted eventually but it took too long. I don't know, I might just take a break for a while.\n\nAgent: I understand. I'd really like to make it right — can I arrange something special for your return?\n\nPlayer: Maybe. I'll think about it.`,
+    result: {
+      sentiment: 'Negative', sentScore: -0.55, scoreColor: '#e34948',
+      issue: 'Retention / churn risk', resolved: 'No', resolvedSub: 'Player non-committal',
+      churn: 'High', churnSub: 'Disengaging, mentioned break',
+      phrases: ['"Bit frustrated"', '"Took too long"', '"Take a break"', '"I\'ll think about it"'],
+      showChurn: true
+    }
+  },
+  {
+    text: `Player: The game keeps freezing on my phone. It's been happening for two days now.\n\nAgent: I'm sorry about that. Which game and what device are you on?\n\nPlayer: Slots section, iPhone 14. It just crashes after about 5 minutes.\n\nAgent: Got it. Our tech team flagged a known issue with that device and iOS 17.4 — a fix is being pushed today. Try clearing the cache for now.\n\nPlayer: Okay I'll try that. Does this happen a lot?\n\nAgent: It's rare but we're on top of it. Should be fully resolved within a few hours.`,
+    result: {
+      sentiment: 'Neutral', sentScore: 0.05, scoreColor: '#eda100',
+      issue: 'Technical issue — game crash', resolved: 'Yes', resolvedSub: 'Fix deployed same day',
+      churn: 'Low', churnSub: 'Issue resolved quickly',
+      phrases: ['"Keeps freezing"', '"Two days now"', '"Does this happen a lot"'],
+      showChurn: false
+    }
+  }
+];
+
+let selectedIdx = 0;
+function selectTranscript(idx, btn) {
+  selectedIdx = idx;
+  document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('transcriptBox').textContent = transcripts[idx].text;
+  document.getElementById('outputGrid').style.display = 'none';
+  document.getElementById('churnAlert').style.display = 'none';
+  ['oc1','oc2','oc3','oc4','oc5'].forEach(id => document.getElementById(id).classList.remove('visible'));
+}
+document.getElementById('transcriptBox').textContent = transcripts[0].text;
+
+function runAnalysis() {
+  const btn = document.getElementById('analyseBtn');
+  btn.disabled = true;
+  document.getElementById('processingMsg').style.display = 'block';
+  document.getElementById('outputGrid').style.display = 'none';
+  document.getElementById('churnAlert').style.display = 'none';
+
+  setTimeout(() => {
+    document.getElementById('processingMsg').style.display = 'none';
+    const r = transcripts[selectedIdx].result;
+    document.getElementById('sentValue').textContent = r.sentiment;
+    document.getElementById('sentValue').style.color = r.scoreColor;
+    document.getElementById('scoreFill').style.width = Math.round((r.sentScore + 1) / 2 * 100) + '%';
+    document.getElementById('scoreFill').style.background = r.scoreColor;
+    document.getElementById('scoreLabel').textContent = 'Score: ' + r.sentScore.toFixed(2) + ' (−1 very negative → +1 very positive)';
+    document.getElementById('issueValue').textContent = r.issue;
+    document.getElementById('resolvedValue').textContent = r.resolved;
+    document.getElementById('resolvedValue').style.color = r.resolved === 'Yes' ? '#1baf7a' : '#e34948';
+    document.getElementById('resolvedSub').textContent = r.resolvedSub;
+    document.getElementById('churnValue').textContent = r.churn + ' risk';
+    document.getElementById('churnValue').style.color = r.churn === 'High' ? '#e34948' : '#1baf7a';
+    document.getElementById('churnSub').textContent = r.churnSub;
+    document.getElementById('phrasesContainer').innerHTML = r.phrases.map(p => `<span class="key-phrase">${p}</span>`).join('');
+
+    document.getElementById('outputGrid').style.display = 'grid';
+    btn.disabled = false;
+
+    ['oc1','oc2','oc3','oc4','oc5'].forEach((id, i) => {
+      setTimeout(() => document.getElementById(id).classList.add('visible'), i * 100);
+    });
+
+    if (r.showChurn) {
+      setTimeout(() => document.getElementById('churnAlert').style.display = 'block', 600);
+    }
+  }, 1400);
+}
+
+// ── DASHBOARD ──
+const allData = [
+  { player:'VIP-0042', channel:'WhatsApp',  issue:'Withdrawal delay',    sentiment:'neg', resolved:true,  signal:'"This keeps happening"' },
+  { player:'VIP-0117', channel:'Telegram',  issue:'Bonus query',         sentiment:'pos', resolved:true,  signal:'"Love the new promo"' },
+  { player:'VIP-0083', channel:'Phone',     issue:'Churn risk',          sentiment:'neg', resolved:false, signal:'"Thinking of leaving"' },
+  { player:'VIP-0205', channel:'Email',     issue:'Technical issue',     sentiment:'neu', resolved:true,  signal:'"When will it be fixed"' },
+  { player:'VIP-0061', channel:'Intercom',  issue:'Compliment',          sentiment:'pos', resolved:true,  signal:'"Best VIP team ever"' },
+  { player:'VIP-0134', channel:'SMS',       issue:'Withdrawal delay',    sentiment:'neg', resolved:true,  signal:'"Same issue again"' },
+  { player:'VIP-0078', channel:'WhatsApp',  issue:'Bonus query',         sentiment:'pos', resolved:true,  signal:'"Thanks for sorting"' },
+  { player:'VIP-0199', channel:'Phone',     issue:'Payment issue',       sentiment:'neg', resolved:false, signal:'"Very frustrated"' },
+  { player:'VIP-0055', channel:'Telegram',  issue:'Technical issue',     sentiment:'neu', resolved:true,  signal:'"Okay I guess"' },
+  { player:'VIP-0311', channel:'Email',     issue:'Compliment',          sentiment:'pos', resolved:true,  signal:'"Always responsive"' },
+  { player:'VIP-0022', channel:'SMS',       issue:'Account access',      sentiment:'neu', resolved:false, signal:'"Still waiting"' },
+  { player:'VIP-0144', channel:'Intercom',  issue:'Payment issue',       sentiment:'neg', resolved:true,  signal:'"Not acceptable"' },
+];
+
+let activeCh = 'all';
+let sc, ic, tc;
+
+function filterCh(ch, btn) {
+  activeCh = ch;
+  document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard();
+}
+
+function renderDashboard() {
+  const data = activeCh === 'all' ? allData : allData.filter(d => d.channel === activeCh);
+  const pos = data.filter(d => d.sentiment==='pos').length;
+  const neu = data.filter(d => d.sentiment==='neu').length;
+  const neg = data.filter(d => d.sentiment==='neg').length;
+  const unres = data.filter(d => !d.resolved).length;
+
+  document.getElementById('kpiRow').innerHTML = [
+    { label:'Interactions', value:data.length, color:'' },
+    { label:'Positive', value:(data.length?Math.round(pos/data.length*100):0)+'%', color:'#1baf7a' },
+    { label:'Negative', value:(data.length?Math.round(neg/data.length*100):0)+'%', color:'#e34948' },
+    { label:'Unresolved', value:unres, color: unres > 2 ? '#e34948' : '#1baf7a' }
+  ].map(k => `<div class="kpi"><div class="k-label">${k.label}</div><div class="k-value" style="color:${k.color||'var(--text)'}">${k.value}</div></div>`).join('');
+
+  const issues = {};
+  data.forEach(d => { issues[d.issue] = (issues[d.issue]||0)+1; });
+
+  if (sc) sc.destroy();
+  if (ic) ic.destroy();
+  if (tc) tc.destroy();
+
+  sc = new Chart(document.getElementById('sentChart'), {
+    type:'doughnut',
+    data:{ labels:['Positive','Neutral','Negative'], datasets:[{ data:[pos,neu,neg], backgroundColor:['#1baf7a','#eda100','#e34948'], borderWidth:0 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{ display:false } } }
+  });
+
+  ic = new Chart(document.getElementById('issueChart'), {
+    type:'bar',
+    data:{ labels:Object.keys(issues), datasets:[{ data:Object.values(issues), backgroundColor:'#7f77dd', borderRadius:4, borderSkipped:false }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ ticks:{ color:'#8b8a96', font:{size:11} }, grid:{ color:'rgba(255,255,255,0.05)' } }, y:{ ticks:{ color:'#8b8a96', font:{size:11} }, grid:{ display:false } } } }
+  });
+
+  tc = new Chart(document.getElementById('trendChart'), {
+    type:'line',
+    data:{
+      labels:['Week 1','Week 2','Week 3','Week 4'],
+      datasets:[
+        { label:'Positive', data:[5,6,4,pos], borderColor:'#1baf7a', backgroundColor:'rgba(27,175,122,0.08)', tension:0.4, fill:true, pointRadius:4 },
+        { label:'Neutral',  data:[3,2,4,neu], borderColor:'#eda100', backgroundColor:'rgba(237,161,0,0.08)',   tension:0.4, fill:true, pointRadius:4 },
+        { label:'Negative', data:[4,5,3,neg], borderColor:'#e34948', backgroundColor:'rgba(227,73,72,0.08)',   tension:0.4, fill:true, pointRadius:4 },
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ ticks:{ color:'#8b8a96', font:{size:11} }, grid:{ display:false } }, y:{ ticks:{ color:'#8b8a96', font:{size:11} }, grid:{ color:'rgba(255,255,255,0.05)' } } } }
+  });
+
+  const sentLabel = { pos:'Positive', neg:'Negative', neu:'Neutral' };
+  document.getElementById('tableBody').innerHTML = data.slice(0,8).map(d => `
+    <tr>
+      <td style="font-weight:500">${d.player}</td>
+      <td><span class="ch-tag">${d.channel}</span></td>
+      <td>${d.issue}</td>
+      <td><span class="badge ${d.sentiment}">${sentLabel[d.sentiment]}</span></td>
+      <td style="color:${d.resolved?'#1baf7a':'#e34948'}">${d.resolved?'Yes':'No'}</td>
+      <td style="font-size:12px;color:var(--muted);font-style:italic">${d.signal}</td>
+    </tr>`).join('');
+}
+</script>
+</body>
+</html>
