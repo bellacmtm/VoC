@@ -144,7 +144,7 @@ During the data retrieval phase, certain conversation subjects are excluded, as 
 
 ### Marketing
 
-The HTML intake tool used to collect and structure screenshot-based feedback from social media is here: [Data Collection Tool MK](https://github.com/bellacmtm/VoC/blob/main/MK_voc_intake.html). The tool is functional but not yet in use, pending Claude API access (see Department Status above).
+The HTML intake tool used to collect and structure screenshot-based feedback from social media is here: [Data Collection Tool MK](https://bellacmtm.github.io/VoC/MK_voc_intake.html). The tool is functional but not yet in use, pending Claude API access (see Department Status above).
 
 ---
 
