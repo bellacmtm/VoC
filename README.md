@@ -115,7 +115,7 @@ As an interim measure, a lightweight internal tool has been developed to allow a
 
 Retrieved Intercom conversation data is filtered before being passed to analysis. Two categories of non-substantive content are removed: automated bot and menu interactions, and internal agent notes that are not part of the customer-facing exchange. Internal notes are identified using Intercom's `part_type` field, which distinguishes them from actual conversation content.
 
-Filtering script: `[link to script in repo]`
+[VIP data pipeline](https://github.com/bellacmtm/VoC/blob/main/VIP_convosample_intercom.py)
 
 ### Customer Support
 
@@ -140,9 +140,11 @@ During the data retrieval phase, certain conversation subjects are excluded, as 
 - WD - Within Timeframe
 - Welcome offer - Granted
 
+[CS data pipeline](https://github.com/bellacmtm/VoC/blob/main/CS_convosample_intercom.py)
+
 ### Marketing
 
-The HTML intake tool used to collect and structure screenshot-based feedback from social media is documented here: `[link to tool in repo]`. The tool is functional but not yet in use, pending Claude API access (see Department Status above).
+The HTML intake tool used to collect and structure screenshot-based feedback from social media is here: [Data Collection Tool MK](https://github.com/bellacmtm/VoC/blob/main/MK_voc_intake.html). The tool is functional but not yet in use, pending Claude API access (see Department Status above).
 
 ---
 
