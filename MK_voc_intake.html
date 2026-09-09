@@ -278,7 +278,8 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/a/macros/mtmgroup.io/s/AKfycbyQwIPT_K3LXfE4dEOkmPS0Th3C_zxMTYXAtEHNLmzHeQxEAvAVzwPI2LGFAcQffAS3/exec';
-const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
+const OPENAI_API = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_KEY = 'YOUR_OPENAI_KEY_HERE';
 const BRANDS = ['SpinBet','SpinBit','Vegastars','Casiny'];
 const CATEGORIES = ['Withdrawal','Verification','VIP','Deposit','Site/Game Issue','Bonus/Free Spin','Other'];
 const CAT_ICONS = { Withdrawal:'💸', Verification:'🪪', VIP:'👑', Deposit:'🏦', 'Site/Game Issue':'🎮', 'Bonus/Free Spin':'🎁', Other:'📌' };
@@ -337,7 +338,7 @@ function renderQueue() {
 function buildItem(item) {
   const statusLabels = {
     waiting: '<span class="s-wait">Waiting — click Extract to analyse</span>',
-    processing: '<span class="s-proc">✨ Claude is reading this...</span>',
+    processing: '<span class="s-proc">✨ AI is reading this...</span>',
     done: '<span class="s-done">✓ Suggestion ready — confirm below</span>',
     confirmed: '<span class="s-sub">✓ Saved to this week\'s collection</span>',
     error: '<span class="s-err">⚠ Could not read — fill in manually</span>',
@@ -378,7 +379,7 @@ function buildConfirmPanel(item) {
 
   return `
     <div class="confirm-panel open" id="cp-${item.id}">
-      <div class="${isAI ? 'ai-tag' : 'ai-tag manual'}">${isAI ? '✨ Claude suggested — review and confirm' : '⚠ Fill in manually'}</div>
+      <div class="${isAI ? 'ai-tag' : 'ai-tag manual'}">${isAI ? '✨ AI suggested — review and confirm' : '⚠ Fill in manually'}</div>
       <div class="cf-grid">
         <div class="cf-field">
           <div class="cf-label">Brand <span class="req">*</span></div>
@@ -434,17 +435,25 @@ async function extractItem(id) {
     const base64 = item.dataUrl.split(',')[1];
     const mediaType = item.file.type || 'image/jpeg';
 
-    const res = await fetch(CLAUDE_API, {
+    const res = await fetch(OPENAI_API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_KEY}`
+      },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'gpt-4o',
         max_tokens: 1000,
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-            { type: 'text', text: `You are analysing a social media screenshot from an iGaming brand's community manager.
+            {
+              type: 'image_url',
+              image_url: { url: `data:${mediaType};base64,${base64}` }
+            },
+            {
+              type: 'text',
+              text: `You are analysing a social media screenshot from an iGaming brand's community manager.
 
 Extract and return ONLY a JSON object, no markdown, no extra text:
 
@@ -458,14 +467,15 @@ Extract and return ONLY a JSON object, no markdown, no extra text:
 Rules:
 - brand: only assign if the brand name is clearly visible in the screenshot, otherwise leave empty
 - category: pick the closest match based on what the player is complaining or talking about
-- summary: write from the player's perspective, factual and concise, max 20 words` }
+- summary: write from the player's perspective, factual and concise, max 20 words`
+            }
           ]
         }]
       })
     });
 
     const data = await res.json();
-    const raw = data.content?.[0]?.text || '';
+    const raw = data.choices?.[0]?.message?.content || '';
     const clean = raw.replace(/```json|```/g, '').trim();
     const suggested = JSON.parse(clean);
 
