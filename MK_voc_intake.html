@@ -278,8 +278,7 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/a/macros/mtmgroup.io/s/AKfycbyQwIPT_K3LXfE4dEOkmPS0Th3C_zxMTYXAtEHNLmzHeQxEAvAVzwPI2LGFAcQffAS3/exec';
-const OPENAI_API = 'https://api.openai.com/v1/chat/completions';
-const OPENAI_KEY = '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';
+// API calls routed through Google Apps Script — key stored securely in Script Properties
 const BRANDS = ['SpinBet','SpinBit','Vegastars','Casiny'];
 const CATEGORIES = ['Withdrawal','Verification','VIP','Deposit','Site/Game Issue','Bonus/Free Spin','Other'];
 const CAT_ICONS = { Withdrawal:'💸', Verification:'🪪', VIP:'👑', Deposit:'🏦', 'Site/Game Issue':'🎮', 'Bonus/Free Spin':'🎁', Other:'📌' };
@@ -424,7 +423,7 @@ function setFS(id, key, value) {
   }
 }
 
-// ── Extract ──
+// ── Extract — routed through Apps Script, key never exposed in browser ──
 async function extractItem(id) {
   const item = items.find(i => i.id == id);
   if (!item) return;
@@ -435,53 +434,26 @@ async function extractItem(id) {
     const base64 = item.dataUrl.split(',')[1];
     const mediaType = item.file.type || 'image/jpeg';
 
-    const res = await fetch(OPENAI_API, {
+    const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_KEY}`
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gpt-4o',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image_url',
-              image_url: { url: `data:${mediaType};base64,${base64}` }
-            },
-            {
-              type: 'text',
-              text: `You are analysing a social media screenshot from an iGaming brand's community manager.
-
-Extract and return ONLY a JSON object, no markdown, no extra text:
-
-{
-  "brand": "SpinBet" | "SpinBit" | "Vegastars" | "Casiny" | "",
-  "category": "Withdrawal" | "Verification" | "VIP" | "Deposit" | "Site/Game Issue" | "Bonus/Free Spin" | "Other",
-  "playerUsername": "username shown or empty string",
-  "summary": "one clear sentence describing what the player's issue or feedback is"
-}
-
-Rules:
-- brand: only assign if the brand name is clearly visible in the screenshot, otherwise leave empty
-- category: pick the closest match based on what the player is complaining or talking about
-- summary: write from the player's perspective, factual and concise, max 20 words`
-            }
-          ]
-        }]
+        action: 'extract',
+        imageBase64: base64,
+        mediaType: mediaType
       })
     });
 
     const data = await res.json();
-    const raw = data.choices?.[0]?.message?.content || '';
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const suggested = JSON.parse(clean);
 
-    item.suggested = suggested;
-    item.formState = { ...suggested };
-    item.status = 'done';
+    if (data.success && data.data) {
+      item.suggested = data.data;
+      item.formState = { ...data.data };
+      item.status = 'done';
+    } else {
+      throw new Error(data.error || 'Extraction failed');
+    }
+
   } catch(err) {
     console.error(err);
     item.status = 'error';
