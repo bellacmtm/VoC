@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Voice of Customer — VIP Demo</title>
+<title>Voice of Customer — Reporting Prototype</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   :root {
@@ -136,7 +136,7 @@
 <body>
 
 <nav>
-  <div class="nav-logo">VoC · VIP</div>
+  <div class="nav-logo">VoC</div>
   <div class="nav-steps">
     <div class="nav-step active" onclick="goTo(1)" id="step1">
       <div class="step-num">1</div> The problem
@@ -156,7 +156,7 @@
 <div class="screen active" id="screen1">
   <div class="eyebrow">Voice of Customer — Phase 1</div>
   <h1>Data is coming in.<br>Nothing is coming out.</h1>
-  <p class="subtitle">The VIP team manages high-value players across 6 channels. Every interaction is logged manually into Terragon — creating admin overhead, inconsistency, and zero visibility.</p>
+  <p class="subtitle">Customer-facing teams manage interactions across multiple channels. Today, most of that data is logged, reviewed, or summarised manually — creating admin overhead, inconsistency, and limited visibility.</p>
 
   <div class="stat-row">
     <div class="stat">
@@ -178,7 +178,7 @@
     <div class="channel-item">
       <div class="channel-icon" style="background:rgba(39,174,239,0.15);color:#27aeef">✈</div>
       <div class="channel-name">Telegram</div>
-      <div class="channel-pain">Most active VIP channel</div>
+      <div class="channel-pain">High engagement, no structure</div>
       <div class="pain-badge">Manual log</div>
     </div>
     <div class="channel-item">
@@ -202,7 +202,7 @@
     <div class="channel-item">
       <div class="channel-icon" style="background:rgba(29,158,117,0.15);color:#1d9e75">⬡</div>
       <div class="channel-name">Intercom</div>
-      <div class="channel-pain">Partially used only</div>
+      <div class="channel-pain">Used across departments</div>
       <div class="pain-badge">Manual log</div>
     </div>
     <div class="channel-item">
@@ -218,7 +218,7 @@
   <div class="agent-box">
     <div style="width:40px;height:40px;border-radius:50%;background:var(--accent-bg);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👤</div>
     <div>
-      <div style="font-weight:600;font-size:14px">VIP agent reads, summarises, and types into Terragon</div>
+      <div style="font-weight:600;font-size:14px">An agent reads, summarises, and manually logs the interaction</div>
       <div style="font-size:12px;color:var(--muted);margin-top:2px">Time lost per interaction: ~8–12 minutes · Error rate: high · Insights generated: none</div>
     </div>
   </div>
@@ -235,7 +235,7 @@
 <div class="screen" id="screen2">
   <div class="eyebrow">Stage 3 of 5 — AI analysis</div>
   <h1>Claude reads every interaction.<br>You see what matters.</h1>
-  <p class="subtitle">Select a sample VIP conversation. Claude extracts sentiment, issue category, resolution status, and churn signals — automatically.</p>
+  <p class="subtitle">Select a sample conversation. Claude extracts sentiment, issue category, resolution status, and churn signals — automatically.</p>
 
   <h3 style="margin-bottom:0.75rem">Choose a sample interaction</h3>
   <div class="transcript-picker">
@@ -298,17 +298,33 @@
 ════════════════════════════════════════════ -->
 <div class="screen" id="screen3">
   <div class="eyebrow">Stage 5 of 5 — Visibility layer</div>
-  <h1>What the head of VIP<br>sees every morning.</h1>
+  <h1>What leadership<br>sees every morning.</h1>
   <p class="subtitle">All interactions tagged, scored, and surfaced. No manual work required.</p>
+
+  <div class="filter-row" id="deptFilterRow">
+    <button class="f-btn active" onclick="filterDept('all',this)">All departments</button>
+    <button class="f-btn" onclick="filterDept('VIP',this)">VIP</button>
+    <button class="f-btn" onclick="filterDept('Support',this)">Customer Support</button>
+    <button class="f-btn" onclick="filterDept('Marketing',this)">Marketing</button>
+  </div>
+
+  <div class="filter-row" id="brandFilterRow">
+    <button class="f-btn active" onclick="filterBrand('all',this)">All brands</button>
+    <button class="f-btn" onclick="filterBrand('Vegastars',this)">Vegastars</button>
+    <button class="f-btn" onclick="filterBrand('Casiny',this)">Casiny</button>
+    <button class="f-btn" onclick="filterBrand('VoltRush',this)">VoltRush</button>
+    <button class="f-btn" onclick="filterBrand('The BlackRoom',this)">The BlackRoom</button>
+    <button class="f-btn" onclick="filterBrand('Smokos',this)">Smokos</button>
+  </div>
 
   <div class="filter-row" id="filterRow">
     <button class="f-btn active" onclick="filterCh('all',this)">All channels</button>
     <button class="f-btn" onclick="filterCh('Telegram',this)">Telegram</button>
     <button class="f-btn" onclick="filterCh('WhatsApp',this)">WhatsApp</button>
-    <button class="f-btn" onclick="filterCh('SMS',this)">SMS</button>
     <button class="f-btn" onclick="filterCh('Email',this)">Email</button>
     <button class="f-btn" onclick="filterCh('Intercom',this)">Intercom</button>
     <button class="f-btn" onclick="filterCh('Phone',this)">Phone</button>
+    <button class="f-btn" onclick="filterCh('Facebook',this)">Facebook</button>
   </div>
 
   <div class="kpi-row" id="kpiRow"></div>
@@ -325,7 +341,7 @@
     </div>
     <div class="chart-card">
       <h3>Issues by category</h3>
-      <div style="position:relative;height:210px"><canvas id="issueChart" role="img" aria-label="Issue categories bar chart"></canvas></div>
+      <div id="issueChartWrap" style="position:relative;height:210px"><canvas id="issueChart" role="img" aria-label="Issue categories bar chart"></canvas></div>
     </div>
     <div class="chart-card full">
       <h3>Sentiment trend — last 4 weeks</h3>
@@ -343,7 +359,7 @@
     <table>
       <thead>
         <tr>
-          <th>Player</th><th>Channel</th><th>Issue</th><th>Sentiment</th><th>Resolved</th><th>Key signal</th>
+          <th>Player</th><th>Department</th><th>Brand</th><th>Channel</th><th>Issue</th><th>Sentiment</th><th>Resolved</th><th>Churn Risk</th><th>Key signal</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -474,32 +490,102 @@ function runAnalysis() {
 
 // ── DASHBOARD ──
 const allData = [
-  { player:'VIP-0042', channel:'WhatsApp',  issue:'Withdrawal delay',    sentiment:'neg', resolved:true,  signal:'"This keeps happening"' },
-  { player:'VIP-0117', channel:'Telegram',  issue:'Bonus query',         sentiment:'pos', resolved:true,  signal:'"Love the new promo"' },
-  { player:'VIP-0083', channel:'Phone',     issue:'Churn risk',          sentiment:'neg', resolved:false, signal:'"Thinking of leaving"' },
-  { player:'VIP-0205', channel:'Email',     issue:'Technical issue',     sentiment:'neu', resolved:true,  signal:'"When will it be fixed"' },
-  { player:'VIP-0061', channel:'Intercom',  issue:'Compliment',          sentiment:'pos', resolved:true,  signal:'"Best VIP team ever"' },
-  { player:'VIP-0134', channel:'SMS',       issue:'Withdrawal delay',    sentiment:'neg', resolved:true,  signal:'"Same issue again"' },
-  { player:'VIP-0078', channel:'WhatsApp',  issue:'Bonus query',         sentiment:'pos', resolved:true,  signal:'"Thanks for sorting"' },
-  { player:'VIP-0199', channel:'Phone',     issue:'Payment issue',       sentiment:'neg', resolved:false, signal:'"Very frustrated"' },
-  { player:'VIP-0055', channel:'Telegram',  issue:'Technical issue',     sentiment:'neu', resolved:true,  signal:'"Okay I guess"' },
-  { player:'VIP-0311', channel:'Email',     issue:'Compliment',          sentiment:'pos', resolved:true,  signal:'"Always responsive"' },
-  { player:'VIP-0022', channel:'SMS',       issue:'Account access',      sentiment:'neu', resolved:false, signal:'"Still waiting"' },
-  { player:'VIP-0144', channel:'Intercom',  issue:'Payment issue',       sentiment:'neg', resolved:true,  signal:'"Not acceptable"' },
+  { player:'Player-6826', dept:'VIP', brand:'Casiny',      channel:'Intercom', issue:'Bonus query',           sentiment:'neu', resolved:true, churn:'Low',    signal:'"u lie to me"' },
+  { player:'Player-0032', dept:'VIP', brand:'VoltRush',    channel:'Intercom', issue:'Bonus query',           sentiment:'pos', resolved:true, churn:'Low',    signal:'"It was great to have you on chat today"' },
+  { player:'Player-2652', dept:'VIP', brand:'The BlackRoom', channel:'Intercom', issue:'Withdrawal delay',    sentiment:'pos', resolved:true, churn:'Low',    signal:'"Hi I withdrew about 30 minutes ago and it\u2019s not processed yet"' },
+  { player:'Player-5581', dept:'VIP', brand:'Casiny',      channel:'Intercom', issue:'Bonus query',           sentiment:'pos', resolved:true, churn:'Low',    signal:'"I deposited and activated this but it\u2019s not there"' },
+  { player:'Player-0339', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'neu', resolved:true, churn:'Low',    signal:'"no bonuses available"' },
+  { player:'Player-8054', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'neu', resolved:true, churn:'Low',    signal:'"Can i please have some free cash to play or free spins please"' },
+  { player:'Player-3210', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'pos', resolved:true, churn:'Low',    signal:'"Loyalty bonus cash back?"' },
+  { player:'Player-6810', dept:'VIP', brand:'Casiny',      channel:'Intercom', issue:'Deposit query',         sentiment:'neu', resolved:true, churn:'Low',    signal:'"now it says $0 after taking the money from my bank account"' },
+  { player:'Player-8524', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'neu', resolved:true, churn:'Low',    signal:'"Any bonuses"' },
+  { player:'Player-6254', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'neu', resolved:true, churn:'Low',    signal:'"I got given these yesterday thwy aren\u2019t working"' },
+  { player:'Player-4485', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'neu', resolved:true, churn:'Low',    signal:'"no space for a bonus"' },
+  { player:'Player-7874', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'pos', resolved:true, churn:'Low',    signal:'"just wondering if you offer any birthday bonuses with deposits?"' },
+  { player:'Player-6600', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Balance query',         sentiment:'neu', resolved:true, churn:'Low',    signal:'"this was the round id"' },
+  { player:'Player-9038', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'neu', resolved:true, churn:'Low',    signal:'"i want to get what i deserve after being loyal player"' },
+  { player:'Player-4730', dept:'VIP', brand:'Casiny',      channel:'Intercom', issue:'Bonus query',           sentiment:'neu', resolved:true, churn:'Low',    signal:'"Is there any chance you could help me out today please?"' },
+  { player:'Player-3450', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Payment method update', sentiment:'neu', resolved:true, churn:'Low',    signal:'"Remove payment methods so I can add new"' },
+  { player:'Player-3807', dept:'VIP', brand:'The BlackRoom', channel:'Intercom', issue:'Bonus query',         sentiment:'neu', resolved:true, churn:'Low',    signal:'"Free spins"' },
+  { player:'Player-5937', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'neu', resolved:true, churn:'Low',    signal:'"Any free spins"' },
+  { player:'Player-0018', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'neg', resolved:true, churn:'High',   signal:'"Please delete my account"' },
+  { player:'Player-4307', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'neg', resolved:true, churn:'High',   signal:'"Well that\u2019s the last time I make a deposit on this site"' },
+  { player:'Player-4127', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'neu', resolved:true, churn:'Low',    signal:'"Is there anything for depositing minimum $30?"' },
+  { player:'Player-7586', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Deposit query',         sentiment:'pos', resolved:true, churn:'Low',    signal:'"Just made a deposit but its not reflecting into my account"' },
+  { player:'Player-6550', dept:'VIP', brand:'Casiny',      channel:'Intercom', issue:'Bonus query',           sentiment:'pos', resolved:true, churn:'Low',    signal:'"exclusive bonuses"' },
+  { player:'Player-0462', dept:'VIP', brand:'Casiny',      channel:'Intercom', issue:'Bonus query',           sentiment:'pos', resolved:true, churn:'Low',    signal:'"I had a 50% retention bonus i deposited $100 and got $0 in bonus"' },
+  { player:'Player-1750', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Bonus query',           sentiment:'neu', resolved:true, churn:'Low',    signal:'"do u have anything for me"' },
+  { player:'Player-5589', dept:'VIP', brand:'The BlackRoom', channel:'Intercom', issue:'Customer inquiry',    sentiment:'neu', resolved:true, churn:'Low',    signal:'"I don\u2019t know what time it is aest as I\u2019m in nz"' },
+  { player:'Player-3959', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Withdrawal query',      sentiment:'pos', resolved:true, churn:'Low',    signal:'"I tried to withdrawl yesterday but got reversed"' },
+  { player:'Player-7164', dept:'VIP', brand:'VoltRush',    channel:'Intercom', issue:'Withdrawal delay',      sentiment:'neu', resolved:true, churn:'Low',    signal:'"Withdraw taking to long to come through"' },
+  { player:'Player-4351', dept:'VIP', brand:'Vegastars',   channel:'Intercom', issue:'Withdrawal query',      sentiment:'neu', resolved:true, churn:'Low',    signal:'"Why are my withdrawals getting cancelled after saying they on the way?"' },
+  { player:'Player-0362', dept:'VIP', brand:'Casiny',      channel:'Intercom', issue:'Bonus query',           sentiment:'pos', resolved:true, churn:'Low',    signal:'"can I have a bonus please"' },
+
+  { player:'Player-115960', dept:'Support', brand:'Casiny',    channel:'Intercom', issue:'Bonus query',             sentiment:'neu', resolved:true,  churn:'Low',    signal:'"Hi can I take the deposit limit off please"' },
+  { player:'Player-065037', dept:'Support', brand:'Casiny',    channel:'Intercom', issue:'Bonus query',             sentiment:'neu', resolved:true,  churn:'Medium', signal:'"Is there any cash bonus available"' },
+  { player:'Player-930620', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Deposit issue',           sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I just did a deposit of $50 but its not showing in my balance"' },
+  { player:'Player-983186', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Deposit issue',           sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I put in 100 and it took from my bank then I put in another 20 and the 20 went through but not the 100"' },
+  { player:'Player-199532', dept:'Support', brand:'Smokos',    channel:'Intercom', issue:'Bonus query',             sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I want Free Spins"' },
+  { player:'Player-145667', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Verification issue',      sentiment:'neu', resolved:true,  churn:'Medium', signal:'"why am I being asked to be verified again"' },
+  { player:'Player-198218', dept:'Support', brand:'VoltRush',  channel:'Intercom', issue:'Bonus query',             sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I want free spins"' },
+  { player:'Player-092725', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Account re-opening',      sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I contacted customer support 3 days ago and I was told my account would be reactivated today"' },
+  { player:'Player-596016', dept:'Support', brand:'Smokos',    channel:'Intercom', issue:'Withdrawal delay',        sentiment:'neg', resolved:true,  churn:'High',   signal:'"I\u2019ve been waiting 7 days for my funds"' },
+  { player:'Player-598218', dept:'Support', brand:'Casiny',    channel:'Intercom', issue:'Withdrawal delay',        sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I need further help"' },
+  { player:'Player-072474', dept:'Support', brand:'Smokos',    channel:'Intercom', issue:'Withdrawal delay',        sentiment:'neu', resolved:true,  churn:'Low',    signal:'"Why is my withdrawal still pending?"' },
+  { player:'Player-191697', dept:'Support', brand:'Smokos',    channel:'Intercom', issue:'Referral program',        sentiment:'neu', resolved:true,  churn:'Low',    signal:'"Refer a Friend"' },
+  { player:'Player-958534', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Withdrawal delay',        sentiment:'neg', resolved:false, churn:'High',   signal:'"so disappointed I won\u2019t be playing with you guys again"' },
+  { player:'Player-181984', dept:'Support', brand:'Smokos',    channel:'Intercom', issue:'Bonus query',             sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I want Free Spins"' },
+  { player:'Player-182032', dept:'Support', brand:'VoltRush',  channel:'Intercom', issue:'Bonus query',             sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I want free spins"' },
+  { player:'Player-867290', dept:'Support', brand:'Smokos',    channel:'Intercom', issue:'Withdrawal request',      sentiment:'pos', resolved:true,  churn:'Low',    signal:'"I\u2019d like to remove my two listed withdrawal accounts"' },
+  { player:'Player-020464', dept:'Support', brand:'Smokos',    channel:'Intercom', issue:'Bonus query',             sentiment:'pos', resolved:true,  churn:'Low',    signal:'"I\u2019m just trying to find a way to get to my old man\u2019s funeral"' },
+  { player:'Player-551071', dept:'Support', brand:'Smokos',    channel:'Intercom', issue:'Bonus query',             sentiment:'neg', resolved:true,  churn:'High',   signal:'"Give us a bonus ya dogs need some luck"' },
+  { player:'Player-766770', dept:'Support', brand:'Smokos',    channel:'Intercom', issue:'Bonus query',             sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I deposited 30 yesterday."' },
+  { player:'Player-172275', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Bonus query',             sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I want free spins"' },
+  { player:'Player-069704', dept:'Support', brand:'Smokos',    channel:'Intercom', issue:'Bonus query',             sentiment:'neg', resolved:true,  churn:'Medium', signal:'"Free spins not working again"' },
+  { player:'Player-773792', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Withdrawal delay',        sentiment:'pos', resolved:true,  churn:'Low',    signal:'"Thank you joy"' },
+  { player:'Player-165089', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Bonus query',             sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I want free spins"' },
+  { player:'Player-783694', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Account closure',         sentiment:'pos', resolved:true,  churn:'High',   signal:'"need my account permantly closed"' },
+  { player:'Player-864816', dept:'Support', brand:'Smokos',    channel:'Intercom', issue:'Bonus query',             sentiment:'pos', resolved:true,  churn:'Low',    signal:'"It says I have free spins but everytime I try to use them it doesn\u2019t let me."' },
+  { player:'Player-895081', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Deposit limit removal',   sentiment:'pos', resolved:true,  churn:'Low',    signal:'"I want to remove my deposit limit please"' },
+  { player:'Player-157399', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Bonus query',             sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I want free spins"' },
+  { player:'Player-089455', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Bonus query',             sentiment:'neu', resolved:true,  churn:'Low',    signal:'"I want my free spins"' },
+  { player:'Player-620552', dept:'Support', brand:'Vegastars', channel:'Intercom', issue:'Account closure',         sentiment:'neu', resolved:true,  churn:'High',   signal:'"close your account"' },
+  { player:'Player-160009', dept:'Support', brand:'VoltRush',  channel:'Intercom', issue:'Verification query',      sentiment:'neu', resolved:true,  churn:'Low',    signal:'"Am I verified"' },
+
+  { player:'Player-0311', dept:'Marketing', brand:null, channel:'Facebook', issue:'Compliment',      sentiment:'pos', resolved:true,  churn:null, signal:'"Always responsive"' },
+  { player:'Player-0144', dept:'Marketing', brand:null, channel:'Facebook', issue:'Payment issue',   sentiment:'neg', resolved:true,  churn:null, signal:'"Not acceptable"' },
 ];
 
 let activeCh = 'all';
+let activeDept = 'all';
+let activeBrand = 'all';
 let sc, ic, tc;
 
 function filterCh(ch, btn) {
   activeCh = ch;
-  document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#filterRow .f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard();
+}
+
+function filterDept(dept, btn) {
+  activeDept = dept;
+  document.querySelectorAll('#deptFilterRow .f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard();
+}
+
+function filterBrand(brand, btn) {
+  activeBrand = brand;
+  document.querySelectorAll('#brandFilterRow .f-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderDashboard();
 }
 
 function renderDashboard() {
-  const data = activeCh === 'all' ? allData : allData.filter(d => d.channel === activeCh);
+  let data = activeCh === 'all' ? allData : allData.filter(d => d.channel === activeCh);
+  data = activeDept === 'all' ? data : data.filter(d => d.dept === activeDept);
+  data = activeBrand === 'all' ? data : data.filter(d => d.brand === activeBrand);
   const pos = data.filter(d => d.sentiment==='pos').length;
   const neu = data.filter(d => d.sentiment==='neu').length;
   const neg = data.filter(d => d.sentiment==='neg').length;
@@ -514,6 +600,9 @@ function renderDashboard() {
 
   const issues = {};
   data.forEach(d => { issues[d.issue] = (issues[d.issue]||0)+1; });
+
+  const issueCount = Object.keys(issues).length;
+  document.getElementById('issueChartWrap').style.height = Math.max(210, issueCount * 34) + 'px';
 
   if (sc) sc.destroy();
   if (ic) ic.destroy();
@@ -545,13 +634,17 @@ function renderDashboard() {
   });
 
   const sentLabel = { pos:'Positive', neg:'Negative', neu:'Neutral' };
-  document.getElementById('tableBody').innerHTML = data.slice(0,8).map(d => `
+  const churnColor = { Low:'#1baf7a', Medium:'#eda100', High:'#e34948' };
+  document.getElementById('tableBody').innerHTML = data.map(d => `
     <tr>
       <td style="font-weight:500">${d.player}</td>
+      <td><span class="ch-tag">${d.dept}</span></td>
+      <td>${d.brand ? `<span class="ch-tag">${d.brand}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
       <td><span class="ch-tag">${d.channel}</span></td>
       <td>${d.issue}</td>
       <td><span class="badge ${d.sentiment}">${sentLabel[d.sentiment]}</span></td>
       <td style="color:${d.resolved?'#1baf7a':'#e34948'}">${d.resolved?'Yes':'No'}</td>
+      <td>${d.churn ? `<span style="color:${churnColor[d.churn]};font-weight:500">${d.churn}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
       <td style="font-size:12px;color:var(--muted);font-style:italic">${d.signal}</td>
     </tr>`).join('');
 }
