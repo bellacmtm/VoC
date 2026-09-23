@@ -138,102 +138,20 @@
 <nav>
   <div class="nav-logo">VoC</div>
   <div class="nav-steps">
-    <div class="nav-step active" onclick="goTo(1)" id="step1">
-      <div class="step-num">1</div> The problem
-    </div>
-    <div class="nav-step" onclick="goTo(2)" id="step2">
-      <div class="step-num">2</div> Live analysis
+    <div class="nav-step active" onclick="goTo(2)" id="step2">
+      <div class="step-num">1</div> Live analysis
     </div>
     <div class="nav-step" onclick="goTo(3)" id="step3">
-      <div class="step-num">3</div> Dashboard
+      <div class="step-num">2</div> Dashboard
     </div>
   </div>
 </nav>
 
 <!-- ═══════════════════════════════════════════
-     SCREEN 1 — THE PROBLEM
-════════════════════════════════════════════ -->
-<div class="screen active" id="screen1">
-  <div class="eyebrow">Voice of Customer — Phase 1</div>
-  <h1>Data is coming in.<br>Nothing is coming out.</h1>
-  <p class="subtitle">Customer-facing teams manage interactions across multiple channels. Today, most of that data is logged, reviewed, or summarised manually — creating admin overhead, inconsistency, and limited visibility.</p>
-
-  <div class="stat-row">
-    <div class="stat">
-      <div class="num">6</div>
-      <div class="lbl">Communication channels</div>
-    </div>
-    <div class="stat">
-      <div class="num">100%</div>
-      <div class="lbl">Logged manually today</div>
-    </div>
-    <div class="stat">
-      <div class="num">0</div>
-      <div class="lbl">Automated insights</div>
-    </div>
-  </div>
-
-  <h2>Where conversations happen today</h2>
-  <div class="channel-row">
-    <div class="channel-item">
-      <div class="channel-icon" style="background:rgba(39,174,239,0.15);color:#27aeef">✈</div>
-      <div class="channel-name">Telegram</div>
-      <div class="channel-pain">High engagement, no structure</div>
-      <div class="pain-badge">Manual log</div>
-    </div>
-    <div class="channel-item">
-      <div class="channel-icon" style="background:rgba(37,211,102,0.15);color:#25d366">✉</div>
-      <div class="channel-name">WhatsApp</div>
-      <div class="channel-pain">High volume, no structure</div>
-      <div class="pain-badge">Manual log</div>
-    </div>
-    <div class="channel-item">
-      <div class="channel-icon" style="background:rgba(237,161,0,0.15);color:#eda100">◉</div>
-      <div class="channel-name">SMS</div>
-      <div class="channel-pain">No thread history</div>
-      <div class="pain-badge">Manual log</div>
-    </div>
-    <div class="channel-item">
-      <div class="channel-icon" style="background:rgba(127,119,221,0.15);color:#7f77dd">@</div>
-      <div class="channel-name">Email</div>
-      <div class="channel-pain">Scattered across inboxes</div>
-      <div class="pain-badge">Manual log</div>
-    </div>
-    <div class="channel-item">
-      <div class="channel-icon" style="background:rgba(29,158,117,0.15);color:#1d9e75">⬡</div>
-      <div class="channel-name">Intercom</div>
-      <div class="channel-pain">Used across departments</div>
-      <div class="pain-badge">Manual log</div>
-    </div>
-    <div class="channel-item">
-      <div class="channel-icon" style="background:rgba(227,73,72,0.15);color:#e34948">☎</div>
-      <div class="channel-name">Phone (Aircall)</div>
-      <div class="channel-pain">Transcripts exist but unused</div>
-      <div class="pain-badge">Manual log</div>
-    </div>
-  </div>
-
-  <div class="arrow-down">↓</div>
-
-  <div class="agent-box">
-    <div style="width:40px;height:40px;border-radius:50%;background:var(--accent-bg);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👤</div>
-    <div>
-      <div style="font-weight:600;font-size:14px">An agent reads, summarises, and manually logs the interaction</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:2px">Time lost per interaction: ~8–12 minutes · Error rate: high · Insights generated: none</div>
-    </div>
-  </div>
-
-  <div class="nav-btns">
-    <div class="spacer"></div>
-    <button class="btn-next" onclick="goTo(2)">See the solution →</button>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
      SCREEN 2 — LIVE ANALYSIS
 ════════════════════════════════════════════ -->
-<div class="screen" id="screen2">
-  <div class="eyebrow">Stage 3 of 5 — AI analysis</div>
+<div class="screen active" id="screen2">
+  <div class="eyebrow">AI analysis</div>
   <h1>Claude reads every interaction.<br>You see what matters.</h1>
   <p class="subtitle">Select a sample conversation. Claude extracts sentiment, issue category, resolution status, and churn signals — automatically.</p>
 
@@ -288,7 +206,7 @@
   </div>
 
   <div class="nav-btns">
-    <button class="btn-prev" onclick="goTo(1)">← Back</button>
+    <div class="spacer"></div>
     <button class="btn-next" onclick="goTo(3)">See the dashboard →</button>
   </div>
 </div>
@@ -297,7 +215,7 @@
      SCREEN 3 — DASHBOARD
 ════════════════════════════════════════════ -->
 <div class="screen" id="screen3">
-  <div class="eyebrow">Stage 5 of 5 — Visibility layer</div>
+  <div class="eyebrow">Visibility layer</div>
   <h1>What leadership<br>sees every morning.</h1>
   <p class="subtitle">All interactions tagged, scored, and surfaced. No manual work required.</p>
 
@@ -375,7 +293,7 @@
 
 <script>
 // ── NAVIGATION ──
-let current = 1;
+let current = 2;
 const done = new Set();
 function goTo(n) {
   document.getElementById('screen'+current).classList.remove('active');
