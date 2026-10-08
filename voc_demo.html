@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice of Customer — Reporting Prototype</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --surface: #16161a;
+    --card: #1e1e24;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --text: #f0eff4;
+    --muted: #8b8a96;
+    --accent: #7f77dd;
+    --accent-bg: rgba(127,119,221,0.12);
+    --accent-border: rgba(127,119,221,0.3);
+    --teal: #1d9e75;
+    --teal-bg: rgba(29,158,117,0.12);
+    --amber: #eda100;
+    --amber-bg: rgba(237,161,0,0.1);
+    --red: #e34948;
+    --red-bg: rgba(227,73,72,0.1);
+    --green: #1baf7a;
+    --green-bg: rgba(27,175,122,0.1);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(14,14,16,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; gap: 0; height: 52px; }
+  .nav-logo { font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: 0.04em; margin-right: 2rem; white-space: nowrap; }
+  .nav-steps { display: flex; gap: 0; flex: 1; }
+  .nav-step { padding: 0 1.2rem; height: 52px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .nav-step:hover { color: var(--text); }
+  .nav-step.active { color: var(--text); border-bottom-color: var(--accent); }
+  .nav-step .step-num { width: 20px; height: 20px; border-radius: 50%; background: var(--card); border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; transition: all 0.2s; }
+  .nav-step.active .step-num { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .nav-step.done .step-num { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .nav-step.done { color: var(--muted); }
+
+  /* SCREENS */
+  .screen { display: none; padding: 2.5rem 2rem; max-width: 860px; margin: 0 auto; }
+  #screen3 { max-width: 1200px; }
+  .screen.active { display: block; }
+
+  /* TYPOGRAPHY */
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem; }
+  h1 { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 0.75rem; }
+  h2 { font-size: 20px; font-weight: 600; margin-bottom: 1rem; }
+  h3 { font-size: 15px; font-weight: 600; margin-bottom: 0.5rem; }
+  .subtitle { font-size: 16px; color: var(--muted); line-height: 1.6; max-width: 580px; margin-bottom: 2rem; }
+  p { color: var(--muted); margin-bottom: 0.75rem; }
+
+  /* CARDS */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; }
+  .card + .card { margin-top: 1rem; }
+
+  /* SCREEN 1 — PROBLEM */
+  .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+  .channel-row { display: flex; flex-direction: column; gap: 10px; margin: 1.5rem 0; }
+  .channel-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
+  .channel-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .channel-name { font-size: 14px; font-weight: 500; flex: 1; }
+  .channel-pain { font-size: 12px; color: var(--muted); }
+  .pain-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--red-bg); color: var(--red); border: 1px solid rgba(227,73,72,0.2); white-space: nowrap; }
+  .arrow-down { text-align: center; color: var(--muted); font-size: 20px; margin: 0.5rem 0; }
+  .agent-box { background: var(--card); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 1rem 1.5rem; display: flex; align-items: center; gap: 12px; }
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 1.5rem 0; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; text-align: center; }
+  .stat .num { font-size: 32px; font-weight: 700; color: var(--red); }
+  .stat .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* SCREEN 2 — PIPELINE */
+  .transcript-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .t-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-strong); background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; transition: all 0.15s; }
+  .t-btn:hover { border-color: var(--accent-border); color: var(--text); }
+  .t-btn.active { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+  .transcript-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; font-size: 13px; color: var(--text); line-height: 1.7; margin-bottom: 1.25rem; min-height: 120px; white-space: pre-wrap; font-family: inherit; }
+  .analyse-btn { display: flex; align-items: center; gap: 8px; padding: 10px 24px; background: var(--accent); border: none; border-radius: var(--radius); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; margin-bottom: 1.5rem; }
+  .analyse-btn:hover { opacity: 0.88; }
+  .analyse-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .output-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .output-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; opacity: 0; transform: translateY(8px); transition: all 0.35s; }
+  .output-card.visible { opacity: 1; transform: translateY(0); }
+  .output-card .label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .output-card .value { font-size: 18px; font-weight: 700; }
+  .output-card .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .score-bar { height: 6px; border-radius: 3px; background: var(--border); margin-top: 10px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+  .key-phrase { display: inline-block; background: var(--accent-bg); border: 1px solid var(--accent-border); color: var(--accent); border-radius: 20px; padding: 3px 10px; font-size: 12px; margin: 3px 3px 0 0; }
+  .processing { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; padding: 0.75rem 0; }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* SCREEN 3 — DASHBOARD */
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .sg-flag { display:inline-block; margin-top:4px; font-size:11px; font-weight:600; color:#eda100; background:rgba(237,161,0,0.12); border:1px solid rgba(237,161,0,0.35); border-radius:999px; padding:1px 8px; white-space:nowrap; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
+  .kpi .k-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .kpi .k-value { font-size: 24px; font-weight: 700; }
+  .kpi .k-delta { font-size: 11px; margin-top: 3px; }
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+  .chart-card h3 { font-size: 13px; color: var(--muted); font-weight: 500; margin-bottom: 1rem; }
+  .full { grid-column: 1 / -1; }
+  .legend { display: flex; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+  .ldot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .filter-row { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .f-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-strong); background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .f-btn.active { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; min-width: 980px; border-collapse: collapse; font-size: 13px; }
+  td.signal { min-width: 180px; max-width: 260px; white-space: normal; overflow-wrap: anywhere; }
+  td.nowrap { white-space: nowrap; }
+  td .ch-tag { white-space: nowrap; }
+  a.conv-link { color: var(--accent); text-decoration: none; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+  a.conv-link:hover { text-decoration: underline; }
+  .conv-plain { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+  .date-row { align-items: center; }
+  .date-row .sep { width: 1px; height: 20px; background: var(--border-strong); margin: 0 4px; }
+  .date-row label { font-size: 12px; color: var(--muted); }
+  .date-row input[type=date] { color-scheme: dark; background: transparent; border: 1px solid var(--border-strong); border-radius: 20px; color: var(--text); font-size: 12px; padding: 4px 10px; }
+  .date-row input[type=date].active { border-color: var(--accent-border); background: var(--accent-bg); }
+  .data-note { font-size: 12px; color: var(--muted); margin: -1.25rem 0 1.75rem; }
+  .pager { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+  .pager button:disabled { opacity: 0.35; cursor: default; }
+  .empty-row td { text-align: center; color: var(--muted); padding: 2rem; }
+  th { text-align: left; padding: 8px 8px; color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .badge.pos { background: var(--green-bg); color: var(--green); }
+  .badge.neg { background: var(--red-bg); color: var(--red); }
+  .badge.neu { background: var(--amber-bg); color: var(--amber); }
+  .ch-tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
+
+  /* NAV BUTTONS */
+  .nav-btns { display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .btn-next { padding: 10px 24px; background: var(--accent); border: none; border-radius: var(--radius); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+  .btn-next:hover { opacity: 0.88; }
+  .btn-prev { padding: 10px 24px; background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius); color: var(--muted); font-size: 14px; cursor: pointer; transition: all 0.15s; }
+  .btn-prev:hover { color: var(--text); border-color: var(--text); }
+  .spacer { flex: 1; }
+
+  /* CHURN FLAG */
+  .churn-flag { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--red-bg); border: 1px solid rgba(227,73,72,0.25); border-radius: var(--radius); margin-top: 1rem; font-size: 13px; color: var(--red); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">VoC</div>
+  <div class="nav-steps">
+    <div class="nav-step active" onclick="goTo(2)" id="step2">
+      <div class="step-num">1</div> Live analysis
+    </div>
+    <div class="nav-step" onclick="goTo(3)" id="step3">
+      <div class="step-num">2</div> Dashboard
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 2 — LIVE ANALYSIS
+════════════════════════════════════════════ -->
+<div class="screen active" id="screen2">
+  <div class="eyebrow">AI analysis</div>
+  <h1>Claude reads every interaction.<br>You see what matters.</h1>
+  <p class="subtitle">Select a sample conversation. Claude extracts sentiment, issue category, resolution status, and churn signals — automatically.</p>
+
+  <h3 style="margin-bottom:0.75rem">Choose a sample interaction</h3>
+  <div class="transcript-picker">
+    <button class="t-btn active" onclick="selectTranscript(0, this)">Frustrated — withdrawal</button>
+    <button class="t-btn" onclick="selectTranscript(1, this)">Happy — bonus</button>
+    <button class="t-btn" onclick="selectTranscript(2, this)">Churn risk — going quiet</button>
+    <button class="t-btn" onclick="selectTranscript(3, this)">Technical complaint</button>
+  </div>
+
+  <div class="transcript-box" id="transcriptBox"></div>
+
+  <button class="analyse-btn" onclick="runAnalysis()" id="analyseBtn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    Analyse with Claude
+  </button>
+
+  <div id="processingMsg" style="display:none">
+    <div class="processing"><div class="spinner"></div>Claude is reading the transcript…</div>
+  </div>
+
+  <div class="output-grid" id="outputGrid" style="display:none">
+    <div class="output-card" id="oc1">
+      <div class="label">Sentiment</div>
+      <div class="value" id="sentValue"></div>
+      <div class="score-bar"><div class="score-fill" id="scoreFill"></div></div>
+      <div class="sub" id="scoreLabel"></div>
+    </div>
+    <div class="output-card" id="oc2">
+      <div class="label">Issue category</div>
+      <div class="value" id="issueValue" style="font-size:15px;margin-top:4px"></div>
+    </div>
+    <div class="output-card" id="oc3">
+      <div class="label">Resolution status</div>
+      <div class="value" id="resolvedValue"></div>
+      <div class="sub" id="resolvedSub"></div>
+    </div>
+    <div class="output-card" id="oc4">
+      <div class="label">Churn risk</div>
+      <div class="value" id="churnValue"></div>
+      <div class="sub" id="churnSub"></div>
+    </div>
+    <div class="output-card full" id="oc5">
+      <div class="label">Key phrases extracted</div>
+      <div id="phrasesContainer" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <div id="churnAlert" style="display:none">
+    <div class="churn-flag">⚠ Churn signal detected — this player may need proactive outreach before their next interaction.</div>
+  </div>
+
+  <div class="nav-btns">
+    <div class="spacer"></div>
+    <button class="btn-next" onclick="goTo(3)">See the dashboard →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 3 — DASHBOARD
+════════════════════════════════════════════ -->
+<div class="screen" id="screen3">
+  <div class="eyebrow">Visibility layer</div>
+  <h1>What leadership<br>sees every morning.</h1>
+  <p class="subtitle">All interactions tagged, scored, and surfaced. No manual work required.</p>
+
+  <div class="filter-row date-row" id="dateFilterRow">
+    <button class="f-btn active" onclick="filterDate('all',this)">All time</button>
+    <button class="f-btn" onclick="filterDate(0,this)">Today</button>
+    <button class="f-btn" onclick="filterDate(7,this)">Last 7 days</button>
+    <button class="f-btn" onclick="filterDate(30,this)">Last 30 days</button>
+    <span class="sep"></span>
+    <label for="dateFrom">From</label><input type="date" id="dateFrom" onchange="filterDateRange()">
+    <label for="dateTo">To</label><input type="date" id="dateTo" onchange="filterDateRange()">
+  </div>
+
+  <div class="filter-row" id="deptFilterRow">
+    <button class="f-btn active" onclick="filterDept('all',this)">All departments</button>
+    <button class="f-btn" onclick="filterDept('VIP',this)">VIP</button>
+    <button class="f-btn" onclick="filterDept('Support',this)">Customer Support</button>
+    <button class="f-btn" onclick="filterDept('Marketing',this)">Marketing</button>
+  </div>
+
+  <div class="filter-row" id="brandFilterRow">
+    <button class="f-btn active" onclick="filterBrand('all',this)">All brands</button>
+    <button class="f-btn" onclick="filterBrand('Vegastars',this)">Vegastars</button>
+    <button class="f-btn" onclick="filterBrand('Casiny',this)">Casiny</button>
+    <button class="f-btn" onclick="filterBrand('VoltRush',this)">VoltRush</button>
+    <button class="f-btn" onclick="filterBrand('The BlackRoom',this)">The BlackRoom</button>
+    <button class="f-btn" onclick="filterBrand('Smokos',this)">Smokos</button>
+    <button class="f-btn" onclick="filterBrand('Spinbit',this)">Spinbit</button>
+    <button class="f-btn" onclick="filterBrand('Spinbet',this)">Spinbet</button>
+  </div>
+
+  <div class="filter-row" id="filterRow" style="display:none">
+    <button class="f-btn active" onclick="filterCh('all',this)">All channels</button>
+    <button class="f-btn" onclick="filterCh('Telegram',this)">Telegram</button>
+    <button class="f-btn" onclick="filterCh('WhatsApp',this)">WhatsApp</button>
+    <button class="f-btn" onclick="filterCh('Email',this)">Email</button>
+    <button class="f-btn" onclick="filterCh('Intercom',this)">Intercom</button>
+    <button class="f-btn" onclick="filterCh('Phone',this)">Phone</button>
+    <button class="f-btn" onclick="filterCh('Facebook',this)">Facebook</button>
+  </div>
+
+  <div class="filter-row" id="dirFilterRow" style="display:none">
+    <button class="f-btn active" onclick="filterDir('all',this)">All calls</button>
+    <button class="f-btn" onclick="filterDir('inbound',this)">Inbound calls</button>
+    <button class="f-btn" onclick="filterDir('outbound',this)">Outbound calls</button>
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3>Sentiment breakdown</h3>
+      <div class="legend">
+        <span><span class="ldot" style="background:#1baf7a"></span>Positive</span>
+        <span><span class="ldot" style="background:#eda100"></span>Neutral</span>
+        <span><span class="ldot" style="background:#e34948"></span>Negative</span>
+      </div>
+      <div style="position:relative;height:180px"><canvas id="sentChart" role="img" aria-label="Sentiment breakdown doughnut chart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Issues by category</h3>
+      <div id="issueChartWrap" style="position:relative;height:210px"><canvas id="issueChart" role="img" aria-label="Issue categories bar chart"></canvas></div>
+    </div>
+    <div class="chart-card full">
+      <h3>Sentiment over time</h3>
+      <div class="legend">
+        <span><span class="ldot" style="background:#1baf7a"></span>Positive</span>
+        <span><span class="ldot" style="background:#eda100"></span>Neutral</span>
+        <span><span class="ldot" style="background:#e34948"></span>Negative</span>
+      </div>
+      <div style="position:relative;height:160px"><canvas id="trendChart" role="img" aria-label="Daily sentiment trend line chart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card" id="publicNote" style="display:none;color:var(--muted);font-size:13px">
+    Conversation-level details (player quotes, conversation IDs and links) are only available in the internal version of this dashboard.
+  </div>
+
+  <div class="chart-card" id="tableCard">
+    <h3 style="margin-bottom:1rem;font-size:14px;color:var(--muted);font-weight:500">Recent interactions</h3>
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th><th>Conversation ID</th><th>Department</th><th>Brand</th><th>Channel</th><th>Issue</th><th>Sentiment</th><th>Resolved</th><th>Churn Risk</th><th>Key signal</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    </div>
+    <div class="pager">
+      <span id="pageInfo"></span>
+      <button class="f-btn" id="prevPage" onclick="changePage(-1)">‹ Prev</button>
+      <button class="f-btn" id="nextPage" onclick="changePage(1)">Next ›</button>
+    </div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="btn-prev" onclick="goTo(2)">← Back</button>
+    <div class="spacer"></div>
+    <div style="font-size:13px;color:var(--muted)">End of demo</div>
+  </div>
+</div>
+
+<script src="voc_data.js"></script>
+<script>
+// ── NAVIGATION ──
+let current = 2;
+const done = new Set();
+function goTo(n) {
+  document.getElementById('screen'+current).classList.remove('active');
+  document.getElementById('step'+current).classList.remove('active');
+  if (current < n) done.add(current);
+  current = n;
+  document.getElementById('screen'+n).classList.add('active');
+  const step = document.getElementById('step'+n);
+  step.classList.add('active');
+  step.classList.remove('done');
+  done.forEach(d => {
+    const s = document.getElementById('step'+d);
+    s.classList.remove('active');
+    s.classList.add('done');
+  });
+  window.scrollTo(0,0);
+  if (n === 3) renderDashboard();
+}
+
+// ── TRANSCRIPTS ──
+const transcripts = [
+  {
+    text: `Agent: Hi, thanks for reaching out. How can I help you today?\n\nPlayer: I've been waiting 3 days for my withdrawal to come through. This is absolutely unacceptable. I have bills to pay.\n\nAgent: I'm really sorry to hear that. Let me pull up your account right now and check the status.\n\nPlayer: This keeps happening. Every single time. I'm seriously thinking about moving to another platform.\n\nAgent: I completely understand your frustration. I can see the withdrawal is still pending due to a verification hold. I'm escalating this now as priority and you should see it within 24 hours.\n\nPlayer: Fine. But this is the last time I deal with this.`,
+    result: {
+      sentiment: 'Negative', sentScore: -0.78, scoreColor: '#e34948',
+      issue: 'Withdrawal delay', resolved: 'Yes', resolvedSub: 'Escalated by agent',
+      churn: 'High', churnSub: 'Expressed intent to leave',
+      phrases: ['"This keeps happening"', '"Every single time"', '"Thinking about moving"', '"Last time I deal with this"'],
+      showChurn: true
+    }
+  },
+  {
+    text: `Player: Hey, just wanted to say the new monthly bonus you guys set up for me was amazing. Really appreciated the personal touch.\n\nAgent: So glad to hear that! We put a lot of thought into tailoring it for your play style.\n\nPlayer: Honestly it's what keeps me coming back. The team here actually listens, which is rare.\n\nAgent: That means a lot. Is there anything else we can do for you this month?\n\nPlayer: Nope, all good. Keep doing what you're doing!`,
+    result: {
+      sentiment: 'Positive', sentScore: 0.88, scoreColor: '#1baf7a',
+      issue: 'Compliment / bonus praise', resolved: 'Yes', resolvedSub: 'No issue raised',
+      churn: 'Low', churnSub: 'High satisfaction expressed',
+      phrases: ['"Personal touch"', '"Keeps me coming back"', '"Team actually listens"', '"Keep doing what you\'re doing"'],
+      showChurn: false
+    }
+  },
+  {
+    text: `Agent: Hi, we noticed you haven't logged in for a while and wanted to check in. Is everything okay?\n\nPlayer: Yeah I've just been busy. And to be honest a bit frustrated after what happened last month.\n\nAgent: I'm sorry to hear that. Would you like to tell me what happened?\n\nPlayer: It was a bonus issue, it got sorted eventually but it took too long. I don't know, I might just take a break for a while.\n\nAgent: I understand. I'd really like to make it right — can I arrange something special for your return?\n\nPlayer: Maybe. I'll think about it.`,
+    result: {
+      sentiment: 'Negative', sentScore: -0.55, scoreColor: '#e34948',
+      issue: 'Retention / churn risk', resolved: 'No', resolvedSub: 'Player non-committal',
+      churn: 'High', churnSub: 'Disengaging, mentioned break',
+      phrases: ['"Bit frustrated"', '"Took too long"', '"Take a break"', '"I\'ll think about it"'],
+      showChurn: true
+    }
+  },
+  {
+    text: `Player: The game keeps freezing on my phone. It's been happening for two days now.\n\nAgent: I'm sorry about that. Which game and what device are you on?\n\nPlayer: Slots section, iPhone 14. It just crashes after about 5 minutes.\n\nAgent: Got it. Our tech team flagged a known issue with that device and iOS 17.4 — a fix is being pushed today. Try clearing the cache for now.\n\nPlayer: Okay I'll try that. Does this happen a lot?\n\nAgent: It's rare but we're on top of it. Should be fully resolved within a few hours.`,
+    result: {
+      sentiment: 'Neutral', sentScore: 0.05, scoreColor: '#eda100',
+      issue: 'Technical issue — game crash', resolved: 'Yes', resolvedSub: 'Fix deployed same day',
+      churn: 'Low', churnSub: 'Issue resolved quickly',
+      phrases: ['"Keeps freezing"', '"Two days now"', '"Does this happen a lot"'],
+      showChurn: false
+    }
+  }
+];
+
+let selectedIdx = 0;
+function selectTranscript(idx, btn) {
+  selectedIdx = idx;
+  document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('transcriptBox').textContent = transcripts[idx].text;
+  document.getElementById('outputGrid').style.display = 'none';
+  document.getElementById('churnAlert').style.display = 'none';
+  ['oc1','oc2','oc3','oc4','oc5'].forEach(id => document.getElementById(id).classList.remove('visible'));
+}
+document.getElementById('transcriptBox').textContent = transcripts[0].text;
+
+function runAnalysis() {
+  const btn = document.getElementById('analyseBtn');
+  btn.disabled = true;
+  document.getElementById('processingMsg').style.display = 'block';
+  document.getElementById('outputGrid').style.display = 'none';
+  document.getElementById('churnAlert').style.display = 'none';
+
+  setTimeout(() => {
+    document.getElementById('processingMsg').style.display = 'none';
+    const r = transcripts[selectedIdx].result;
+    document.getElementById('sentValue').textContent = r.sentiment;
+    document.getElementById('sentValue').style.color = r.scoreColor;
+    document.getElementById('scoreFill').style.width = Math.round((r.sentScore + 1) / 2 * 100) + '%';
+    document.getElementById('scoreFill').style.background = r.scoreColor;
+    document.getElementById('scoreLabel').textContent = 'Score: ' + r.sentScore.toFixed(2) + ' (−1 very negative → +1 very positive)';
+    document.getElementById('issueValue').textContent = r.issue;
+    document.getElementById('resolvedValue').textContent = r.resolved;
+    document.getElementById('resolvedValue').style.color = r.resolved === 'Yes' ? '#1baf7a' : '#e34948';
+    document.getElementById('resolvedSub').textContent = r.resolvedSub;
+    document.getElementById('churnValue').textContent = r.churn + ' risk';
+    document.getElementById('churnValue').style.color = r.churn === 'High' ? '#e34948' : '#1baf7a';
+    document.getElementById('churnSub').textContent = r.churnSub;
+    document.getElementById('phrasesContainer').innerHTML = r.phrases.map(p => `<span class="key-phrase">${p}</span>`).join('');
+
+    document.getElementById('outputGrid').style.display = 'grid';
+    btn.disabled = false;
+
+    ['oc1','oc2','oc3','oc4','oc5'].forEach((id, i) => {
+      setTimeout(() => document.getElementById(id).classList.add('visible'), i * 100);
+    });
+
+    if (r.showChurn) {
+      setTimeout(() => document.getElementById('churnAlert').style.display = 'block', 600);
+    }
+  }, 1400);
+}
+
+// ── DASHBOARD ──
+// Mock Marketing data until real comments are collected (delete when real data arrives)
+const MOCK_MARKETING = [
+  {"convId": "MOCK-001", "link": null, "ts": 1790881560000, "dept": "Marketing", "brand": "Spinbet", "channel": "Email", "issue": "Unsubscribe request", "sentiment": "neu", "resolved": true, "churn": "Low", "signal": "\"Stop emailing me please\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-002", "link": null, "ts": 1790937360000, "dept": "Marketing", "brand": "Smokos", "channel": "Email", "issue": "Email frequency", "sentiment": "neg", "resolved": true, "churn": "Low", "signal": "\"Too many emails, I'll check the site myself\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-003", "link": null, "ts": 1791020340000, "dept": "Marketing", "brand": "Casiny", "channel": "Instagram", "issue": "New game feedback", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"The new slot looks sick, can't wait to try it\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-004", "link": null, "ts": 1791124260000, "dept": "Marketing", "brand": "Casiny", "channel": "Facebook", "issue": "Bonus eligibility", "sentiment": "neg", "resolved": true, "churn": "Medium", "signal": "\"Why am I never eligible for these offers?\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-005", "link": null, "ts": 1791236940000, "dept": "Marketing", "brand": "Casiny", "channel": "Instagram", "issue": "Promo feedback", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"That cashback offer actually saved my week\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-006", "link": null, "ts": 1791311340000, "dept": "Marketing", "brand": "Spinbit", "channel": "Instagram", "issue": "New game feedback", "sentiment": "neu", "resolved": true, "churn": "Low", "signal": "\"Any plans to add more live tables?\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-007", "link": null, "ts": 1791411780000, "dept": "Marketing", "brand": "Casiny", "channel": "Facebook", "issue": "Promo terms complaint", "sentiment": "neg", "resolved": true, "churn": "Medium", "signal": "\"Max win of $50 on free spins is a joke\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-008", "link": null, "ts": 1791479700000, "dept": "Marketing", "brand": "Casiny", "channel": "Email", "issue": "Chasing losses", "sentiment": "neu", "resolved": true, "churn": "Low", "signal": "\"Need a good bonus to win back what I lost this week\"", "safer": true, "saferReason": "Customer mentions wanting a bonus to win back losses (chasing losses).", "mock": true},
+  {"convId": "MOCK-009", "link": null, "ts": 1790862240000, "dept": "Marketing", "brand": "Smokos", "channel": "Telegram", "issue": "Giveaway query", "sentiment": "neu", "resolved": true, "churn": "Low", "signal": "\"Is the giveaway open to everyone?\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-010", "link": null, "ts": 1790953500000, "dept": "Marketing", "brand": "Spinbet", "channel": "Facebook", "issue": "Promo feedback", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"The free bet this weekend was great\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-011", "link": null, "ts": 1791048780000, "dept": "Marketing", "brand": "Spinbet", "channel": "Facebook", "issue": "Bet settlement complaint", "sentiment": "neg", "resolved": true, "churn": "High", "signal": "\"Bet settled wrong and nobody fixes it. Moving to another site\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-012", "link": null, "ts": 1791158160000, "dept": "Marketing", "brand": "Spinbit", "channel": "Instagram", "issue": "Compliment", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"Crypto deposits are so smooth here\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-013", "link": null, "ts": 1791225960000, "dept": "Marketing", "brand": "The BlackRoom", "channel": "Email", "issue": "Spending concern", "sentiment": "neu", "resolved": true, "churn": "Low", "signal": "\"I've been spending too much lately, can you lower my limits?\"", "safer": true, "saferReason": "Customer says they are spending too much and asks for lower limits.", "mock": true},
+  {"convId": "MOCK-014", "link": null, "ts": 1791325080000, "dept": "Marketing", "brand": "Vegastars", "channel": "Email", "issue": "Promotions while self-excluded", "sentiment": "neg", "resolved": true, "churn": "Low", "signal": "\"I'm trying to quit, please stop sending me offers\"", "safer": true, "saferReason": "Customer says they are trying to quit gambling and asks to stop receiving promotions.", "mock": true},
+  {"convId": "MOCK-015", "link": null, "ts": 1791367620000, "dept": "Marketing", "brand": "Vegastars", "channel": "Facebook", "issue": "Promo feedback", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"Love the weekend reload, keep these coming\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-016", "link": null, "ts": 1791493800000, "dept": "Marketing", "brand": "VoltRush", "channel": "Facebook", "issue": "Free spins not credited", "sentiment": "neg", "resolved": true, "churn": "Medium", "signal": "\"Opted in for the free spins promo and got nothing\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-017", "link": null, "ts": 1790878140000, "dept": "Marketing", "brand": "VoltRush", "channel": "Telegram", "issue": "Tournament feedback", "sentiment": "neu", "resolved": true, "churn": "Low", "signal": "\"Leaderboard didn't update for hours during the tournament\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-018", "link": null, "ts": 1790983560000, "dept": "Marketing", "brand": "Casiny", "channel": "Email", "issue": "Email frequency", "sentiment": "neg", "resolved": true, "churn": "Medium", "signal": "\"Three emails a day is too much, chill\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-019", "link": null, "ts": 1791020520000, "dept": "Marketing", "brand": "Spinbit", "channel": "Email", "issue": "Promo feedback", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"Nice weekly drop, appreciate it\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-020", "link": null, "ts": 1791110880000, "dept": "Marketing", "brand": "The BlackRoom", "channel": "Instagram", "issue": "VIP perks feedback", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"The birthday gift was a really nice touch\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-021", "link": null, "ts": 1791224460000, "dept": "Marketing", "brand": "VoltRush", "channel": "Instagram", "issue": "Promo feedback", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"Drops & wins this week were insane\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-022", "link": null, "ts": 1791315480000, "dept": "Marketing", "brand": "Spinbit", "channel": "Facebook", "issue": "Withdrawal complaint", "sentiment": "neg", "resolved": true, "churn": "High", "signal": "\"Third time asking about my withdrawal. Last chance\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-023", "link": null, "ts": 1791416220000, "dept": "Marketing", "brand": "The BlackRoom", "channel": "Instagram", "issue": "Bonus eligibility", "sentiment": "neg", "resolved": true, "churn": "Medium", "signal": "\"VIPs elsewhere get way better reloads than this\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-024", "link": null, "ts": 1791497040000, "dept": "Marketing", "brand": "Spinbet", "channel": "Telegram", "issue": "Tournament feedback", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"Prediction league is a cool idea\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-025", "link": null, "ts": 1790849820000, "dept": "Marketing", "brand": "VoltRush", "channel": "Facebook", "issue": "Misleading promo", "sentiment": "neg", "resolved": true, "churn": "High", "signal": "\"Advertised 200% bonus, only got 100%. Done with this site\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-026", "link": null, "ts": 1790984640000, "dept": "Marketing", "brand": "Vegastars", "channel": "Instagram", "issue": "Promo terms complaint", "sentiment": "neg", "resolved": true, "churn": "Medium", "signal": "\"Wagering on this offer is way too high, not worth it\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-027", "link": null, "ts": 1791021780000, "dept": "Marketing", "brand": "Smokos", "channel": "Instagram", "issue": "Compliment", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"Smokos never disappoints\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-028", "link": null, "ts": 1791135660000, "dept": "Marketing", "brand": "VoltRush", "channel": "Instagram", "issue": "Compliment", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"Support and promos both on point lately\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-029", "link": null, "ts": 1791238680000, "dept": "Marketing", "brand": "Smokos", "channel": "Facebook", "issue": "Promo feedback", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"Fun promo this week, won a bit too\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-030", "link": null, "ts": 1791320160000, "dept": "Marketing", "brand": "Vegastars", "channel": "Telegram", "issue": "Tournament feedback", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"Tournament was so much fun, when's the next one?\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-031", "link": null, "ts": 1791399660000, "dept": "Marketing", "brand": "Spinbit", "channel": "Telegram", "issue": "Giveaway query", "sentiment": "neu", "resolved": true, "churn": "Low", "signal": "\"Giveaway entries close when?\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-032", "link": null, "ts": 1791498120000, "dept": "Marketing", "brand": "The BlackRoom", "channel": "Facebook", "issue": "Compliment", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"Classy site, love the new look\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-033", "link": null, "ts": 1790861940000, "dept": "Marketing", "brand": "The BlackRoom", "channel": "Telegram", "issue": "Event invitation", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"Count me in for the event next month\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-034", "link": null, "ts": 1790940660000, "dept": "Marketing", "brand": "Vegastars", "channel": "Instagram", "issue": "Compliment", "sentiment": "pos", "resolved": true, "churn": "Low", "signal": "\"Best site I've played on, payouts are quick\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-035", "link": null, "ts": 1791018780000, "dept": "Marketing", "brand": "Vegastars", "channel": "Email", "issue": "Unsubscribe request", "sentiment": "neu", "resolved": true, "churn": "Low", "signal": "\"Please take me off the mailing list\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-036", "link": null, "ts": 1791133680000, "dept": "Marketing", "brand": "Casiny", "channel": "Telegram", "issue": "Giveaway query", "sentiment": "neu", "resolved": true, "churn": "Low", "signal": "\"Do I need to deposit to enter the giveaway?\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-037", "link": null, "ts": 1791213900000, "dept": "Marketing", "brand": "Smokos", "channel": "Instagram", "issue": "Misleading promo", "sentiment": "neg", "resolved": true, "churn": "Medium", "signal": "\"Your post says 'free' but it needs a $50 deposit\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-038", "link": null, "ts": 1791320280000, "dept": "Marketing", "brand": "Spinbit", "channel": "Facebook", "issue": "Misleading promo", "sentiment": "neg", "resolved": true, "churn": "Medium", "signal": "\"Rakeback isn't what the banner says\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-039", "link": null, "ts": 1791414300000, "dept": "Marketing", "brand": "Spinbet", "channel": "Instagram", "issue": "Promo terms complaint", "sentiment": "neg", "resolved": true, "churn": "Medium", "signal": "\"Odds restrictions on the free bet are ridiculous\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-040", "link": null, "ts": 1791466080000, "dept": "Marketing", "brand": "VoltRush", "channel": "Telegram", "issue": "Giveaway query", "sentiment": "neu", "resolved": true, "churn": "Low", "signal": "\"How do I claim the giveaway prize?\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-041", "link": null, "ts": 1790886900000, "dept": "Marketing", "brand": "Vegastars", "channel": "Email", "issue": "Free spins not credited", "sentiment": "neg", "resolved": true, "churn": "Medium", "signal": "\"Got the email about 50 free spins but nothing in my account\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-042", "link": null, "ts": 1790960160000, "dept": "Marketing", "brand": "Smokos", "channel": "Facebook", "issue": "Withdrawal complaint", "sentiment": "neg", "resolved": true, "churn": "High", "signal": "\"Withdrawal pending 5 days. Not touching your promos again\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-043", "link": null, "ts": 1791031920000, "dept": "Marketing", "brand": "Vegastars", "channel": "Facebook", "issue": "Misleading promo", "sentiment": "neg", "resolved": true, "churn": "High", "signal": "\"The ad said no wagering but there clearly is. Feels like a scam\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-044", "link": null, "ts": 1791150900000, "dept": "Marketing", "brand": "Vegastars", "channel": "Telegram", "issue": "Giveaway query", "sentiment": "neu", "resolved": true, "churn": "Low", "signal": "\"When are the giveaway winners announced?\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-045", "link": null, "ts": 1791218700000, "dept": "Marketing", "brand": "Spinbet", "channel": "Email", "issue": "Promotions while self-excluded", "sentiment": "neg", "resolved": true, "churn": "Low", "signal": "\"I self-excluded last month, why am I still getting promos?\"", "safer": true, "saferReason": "Customer says they self-excluded and are still receiving promotional emails.", "mock": true},
+  {"convId": "MOCK-046", "link": null, "ts": 1791321720000, "dept": "Marketing", "brand": "The BlackRoom", "channel": "Email", "issue": "Promo terms complaint", "sentiment": "neg", "resolved": true, "churn": "Medium", "signal": "\"Offer expired before I even saw the email\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-047", "link": null, "ts": 1791404040000, "dept": "Marketing", "brand": "Vegastars", "channel": "Facebook", "issue": "Withdrawal complaint", "sentiment": "neg", "resolved": true, "churn": "High", "signal": "\"Stop posting promos and pay my withdrawal first\"", "safer": false, "saferReason": "", "mock": true},
+  {"convId": "MOCK-048", "link": null, "ts": 1791461100000, "dept": "Marketing", "brand": "VoltRush", "channel": "Email", "issue": "Unsubscribe request", "sentiment": "neu", "resolved": true, "churn": "Low", "signal": "\"Unsubscribe please\"", "safer": false, "saferReason": "", "mock": true}
+];
+// Real data comes from voc_data.js (built by build_dashboard_data.py)
+const allData = [...(window.VOC_DATA || []), ...MOCK_MARKETING];
+
+let activeCh = 'all';
+let activeDept = 'all';
+let activeBrand = 'all';
+let activeDir = 'all';
+let dateStart = null, dateEnd = null;
+document.addEventListener('DOMContentLoaded', () => {
+  const n = document.getElementById('dataNote');
+  if (window.VOC_PUBLIC) {
+    document.getElementById('tableCard').style.display = 'none';
+    document.getElementById('publicNote').style.display = '';
+  }
+  if (n) n.textContent = (window.VOC_PUBLIC ? 'Public version: numbers and charts only · ' : '') + 'Data: 1–8 Oct · VIP and Customer Support: all closed conversations · Marketing: mock data' +
+    (window.VOC_UPDATED ? ' · Last updated ' + window.VOC_UPDATED : '');
+});
+const PAGE_SIZE = 25;
+const sentLabel = { pos:'Positive', neg:'Negative', neu:'Neutral' };
+const churnColor = { Low:'#1baf7a', Medium:'#eda100', High:'#e34948' };
+let tableRows = [], tablePage = 0;   // ms timestamps; null = no limit
+
+function startOfDay(d) { const x = new Date(d); x.setHours(0,0,0,0); return x.getTime(); }
+
+function filterDate(days, btn) {
+  document.querySelectorAll('#dateFilterRow .f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('dateFrom').value = '';
+  document.getElementById('dateTo').value = '';
+  document.querySelectorAll('#dateFilterRow input').forEach(i => i.classList.remove('active'));
+  if (days === 'all') { dateStart = dateEnd = null; }
+  else { dateStart = startOfDay(Date.now()) - days * 86400000; dateEnd = null; }
+  renderDashboard();
+}
+
+function filterDateRange() {
+  const from = document.getElementById('dateFrom').value;
+  const to = document.getElementById('dateTo').value;
+  document.querySelectorAll('#dateFilterRow .f-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#dateFilterRow input').forEach(i => i.classList.toggle('active', !!i.value));
+  dateStart = from ? new Date(from + 'T00:00:00').getTime() : null;
+  dateEnd = to ? new Date(to + 'T23:59:59').getTime() : null;
+  if (!from && !to) document.querySelector('#dateFilterRow .f-btn').classList.add('active');
+  renderDashboard();
+}
+
+function fmtDate(ts) {
+  return new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+let sc, ic, tc;
+
+function filterCh(ch, btn) {
+  activeCh = ch;
+  document.querySelectorAll('#filterRow .f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Inbound/outbound row only makes sense for calls
+  const dirRow = document.getElementById('dirFilterRow');
+  if (ch === 'Phone') {
+    dirRow.style.display = '';
+  } else {
+    dirRow.style.display = 'none';
+    activeDir = 'all';
+    dirRow.querySelectorAll('.f-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  }
+  renderDashboard();
+}
+
+function filterDept(dept, btn) {
+  activeDept = dept;
+  document.querySelectorAll('#deptFilterRow .f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Channel row only makes sense for VIP (the only multi-channel team)
+  const chRow = document.getElementById('filterRow');
+  const dirRow = document.getElementById('dirFilterRow');
+  if (dept === 'VIP') {
+    chRow.style.display = '';
+  } else {
+    chRow.style.display = 'none';
+    dirRow.style.display = 'none';
+    activeCh = 'all';
+    activeDir = 'all';
+    chRow.querySelectorAll('.f-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+    dirRow.querySelectorAll('.f-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  }
+  renderDashboard();
+}
+
+function filterBrand(brand, btn) {
+  activeBrand = brand;
+  document.querySelectorAll('#brandFilterRow .f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard();
+}
+
+function filterDir(dir, btn) {
+  activeDir = dir;
+  document.querySelectorAll('#dirFilterRow .f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard();
+}
+
+function renderTable() {
+  const rows = tableRows;
+  const convCell = d => !d.convId ? '<span style="color:var(--muted)">—</span>'
+    : d.link ? `<a class="conv-link" href="${d.link}" target="_blank" rel="noopener">${d.convId}</a>`
+    : `<span class="conv-plain">${d.convId}</span>`;
+  document.getElementById('tableBody').innerHTML = rows.length ? rows.slice(tablePage * PAGE_SIZE, (tablePage + 1) * PAGE_SIZE).map(d => `
+    <tr>
+      <td class="nowrap" style="color:var(--muted)">${d.ts ? fmtDate(d.ts) : '—'}</td>
+      <td class="nowrap">${convCell(d)}</td>
+      <td><span class="ch-tag">${d.dept}</span></td>
+      <td>${d.brand ? `<span class="ch-tag">${d.brand}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td><span class="ch-tag">${d.channel}${d.direction ? ' · ' + d.direction : ''}</span></td>
+      <td>${d.issue}${d.safer ? `<br><span class="sg-flag" title="${(d.saferReason||'').replace(/"/g,'&quot;')}">⚠ Safer gambling</span>` : ''}</td>
+      <td><span class="badge ${d.sentiment}">${sentLabel[d.sentiment]}</span></td>
+      <td style="color:${d.resolved?'#1baf7a':'#e34948'}">${d.resolved?'Yes':'No'}</td>
+      <td>${d.churn ? `<span style="color:${churnColor[d.churn]};font-weight:500">${d.churn}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td class="signal" style="font-size:12px;color:var(--muted);font-style:italic">${d.signal}</td>
+    </tr>`).join('') : '<tr class="empty-row"><td colspan="10">No interactions in this period.</td></tr>';
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const from = rows.length ? tablePage * PAGE_SIZE + 1 : 0;
+  const to = Math.min(rows.length, (tablePage + 1) * PAGE_SIZE);
+  document.getElementById('pageInfo').textContent = `${from}–${to} of ${rows.length} · page ${tablePage + 1} of ${pages}`;
+  document.getElementById('prevPage').disabled = tablePage === 0;
+  document.getElementById('nextPage').disabled = tablePage >= pages - 1;
+}
+
+function changePage(step) {
+  const pages = Math.max(1, Math.ceil(tableRows.length / PAGE_SIZE));
+  tablePage = Math.min(pages - 1, Math.max(0, tablePage + step));
+  renderTable();
+}
+
+function renderDashboard() {
+  let data = activeCh === 'all' ? allData : allData.filter(d => d.channel === activeCh);
+  data = activeDept === 'all' ? data : data.filter(d => d.dept === activeDept);
+  data = activeBrand === 'all' ? data : data.filter(d => d.brand === activeBrand);
+  data = activeDir === 'all' ? data : data.filter(d => d.direction === activeDir);
+  // Date filter: rows without a date (mock Marketing data) only show under "All time"
+  if (dateStart !== null || dateEnd !== null) {
+    data = data.filter(d => d.ts && (dateStart === null || d.ts >= dateStart) && (dateEnd === null || d.ts <= dateEnd));
+  }
+  const pos = data.filter(d => d.sentiment==='pos').length;
+  const neu = data.filter(d => d.sentiment==='neu').length;
+  const neg = data.filter(d => d.sentiment==='neg').length;
+  const unres = data.filter(d => !d.resolved).length;
+  const sg = data.filter(d => d.safer).length;
+
+  document.getElementById('kpiRow').innerHTML = [
+    { label:'Interactions', value:data.length, color:'' },
+    { label:'Positive', value:(data.length?Math.round(pos/data.length*100):0)+'%', color:'#1baf7a' },
+    { label:'Negative', value:(data.length?Math.round(neg/data.length*100):0)+'%', color:'#e34948' },
+    { label:'Unresolved', value:unres, color: unres > 2 ? '#e34948' : '#1baf7a' },
+    { label:'Safer gambling flags', value:sg, color: sg ? '#eda100' : '' }
+  ].map(k => `<div class="kpi"><div class="k-label">${k.label}</div><div class="k-value" style="color:${k.color||'var(--text)'}">${k.value}</div></div>`).join('');
+
+  const issues = {};
+  data.forEach(d => { issues[d.issue] = (issues[d.issue]||0)+1; });
+  let issueSorted = Object.entries(issues).sort((a,b) => b[1] - a[1]);
+  if (issueSorted.length > 12) {   // keep the chart readable: top 12 + everything else
+    const rest = issueSorted.slice(12).reduce((sum, e) => sum + e[1], 0);
+    issueSorted = [...issueSorted.slice(0, 12), ['All other issues', rest]];
+  }
+
+  const issueCount = issueSorted.length;
+  document.getElementById('issueChartWrap').style.height = Math.max(210, issueCount * 34) + 'px';
+
+  if (sc) sc.destroy();
+  if (ic) ic.destroy();
+  if (tc) tc.destroy();
+
+  sc = new Chart(document.getElementById('sentChart'), {
+    type:'doughnut',
+    data:{ labels:['Positive','Neutral','Negative'], datasets:[{ data:[pos,neu,neg], backgroundColor:['#1baf7a','#eda100','#e34948'], borderWidth:0 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{ display:false } } }
+  });
+
+  ic = new Chart(document.getElementById('issueChart'), {
+    type:'bar',
+    data:{ labels:issueSorted.map(e => e[0]), datasets:[{ data:issueSorted.map(e => e[1]), backgroundColor:'#7f77dd', borderRadius:4, borderSkipped:false }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ beginAtZero:true, ticks:{ color:'#8b8a96', font:{size:11}, precision:0 }, grid:{ color:'rgba(255,255,255,0.05)' } }, y:{ ticks:{ color:'#8b8a96', font:{size:11} }, grid:{ display:false } } } }
+  });
+
+  const days = {};
+  data.filter(d => d.ts).forEach(d => {
+    const k = startOfDay(d.ts);
+    days[k] = days[k] || { pos:0, neu:0, neg:0 };
+    days[k][d.sentiment]++;
+  });
+  const dayKeys = Object.keys(days).map(Number).sort((a,b) => a - b);
+  const dayLabels = dayKeys.map(k => new Date(k).toLocaleDateString('en-GB', { day:'numeric', month:'short' }));
+  const series = s => dayKeys.map(k => days[k][s]);
+
+  tc = new Chart(document.getElementById('trendChart'), {
+    type:'line',
+    data:{
+      labels:dayLabels,
+      datasets:[
+        { label:'Positive', data:series('pos'), borderColor:'#1baf7a', backgroundColor:'rgba(27,175,122,0.08)', tension:0.4, fill:true, pointRadius:4 },
+        { label:'Neutral',  data:series('neu'), borderColor:'#eda100', backgroundColor:'rgba(237,161,0,0.08)',   tension:0.4, fill:true, pointRadius:4 },
+        { label:'Negative', data:series('neg'), borderColor:'#e34948', backgroundColor:'rgba(227,73,72,0.08)',   tension:0.4, fill:true, pointRadius:4 },
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ ticks:{ color:'#8b8a96', font:{size:11} }, grid:{ display:false } }, y:{ ticks:{ color:'#8b8a96', font:{size:11} }, grid:{ color:'rgba(255,255,255,0.05)' } } } }
+  });
+
+  tableRows = [...data].sort((a,b) => (b.ts||0) - (a.ts||0));
+  tablePage = 0;
+  renderTable();
+}
+</script>
+</body>
+</html>
